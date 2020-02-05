@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.util.Arrays.asList;
 
@@ -234,7 +235,7 @@ public class EmporiaDownloader {
         clientConfig.property(AuthTokenClientRequestFilter.AUTHENTICATION_MANAGER,
                 authenticationManager);
 
-        client = initClient(clientConfig);
+        initClient(clientConfig);
         Customer customer = getCustomer(configuration.containsKey(CUSTOMER_EMAIL) ?
                 configuration.getString(CUSTOMER_EMAIL) : configuration.getString(USERNAME));
 
@@ -262,7 +263,7 @@ public class EmporiaDownloader {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
-                    finalInfluxDBLoader.writeToDB();
+                    Objects.requireNonNull(finalInfluxDBLoader).writeToDB();
                 }
             });
 
@@ -282,7 +283,10 @@ public class EmporiaDownloader {
                 }
             }
 
-            log.info("current write count: " + influxDBLoader.getWritesCount());
+            if (influxDBLoader != null) {
+                log.info("current write count: " + influxDBLoader.getWritesCount());
+            }
+
             try {
                 Thread.sleep(1000 * 60 * 5);
             } catch (InterruptedException e) {
@@ -360,14 +364,14 @@ public class EmporiaDownloader {
         return readings;
     }
 
-    protected Object getObject(String url, Class clazz) {
+    protected Object getObject(String url, Class<?> clazz) {
         WebTarget target = client.target(url);
         Invocation.Builder builder = target.request();
         Response response = builder.get();
         return response.readEntity(clazz);
     }
 
-    protected Client initClient(ClientConfig config) {
+    protected void initClient(ClientConfig config) {
         SSLContext ctx = null;
         try {
             ctx = SSLContext.getInstance("SSL");
@@ -377,10 +381,8 @@ public class EmporiaDownloader {
             System.exit(1);
         }
 
-        Client client = ClientBuilder.newBuilder().withConfig(config).register(JacksonConfig.class)
+        client = ClientBuilder.newBuilder().withConfig(config).register(JacksonConfig.class)
                 .hostnameVerifier(new TrustAllHostNameVerifier()).sslContext(ctx).build();
-
-        return client;
     }
 
     TrustManager[] certs = new TrustManager[] { new X509TrustManager() {
