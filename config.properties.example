@@ -1,0 +1,6 @@
+# the following three parameters MUST be defined!
+pool-id=
+clientapp-id=
+region=
+
+# add any other parameters here
