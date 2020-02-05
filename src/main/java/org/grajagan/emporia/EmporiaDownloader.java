@@ -28,6 +28,7 @@ import joptsimple.OptionSpec;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.ConfigurationUtils;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.glassfish.jersey.client.ClientConfig;
 import org.grajagan.aws.AuthTokenClientRequestFilter;
@@ -49,6 +50,8 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
@@ -86,22 +89,26 @@ public class EmporiaDownloader {
     private static final String INFLUX_DB = "influx-db";
     private static final String DISABLE_INFLUX = "disable-influx";
 
+    private static final String SLEEP = "sleep";
+
     private static final String DEFAULT_CONFIGURATION_FILE =
             Paths.get("config.properties").toAbsolutePath().toString();
 
-    public static final String DEFAULT_LOCAL_HOST = "localhost";
-    public static final String DEFAULT_INFLUX_URL = "http://" + DEFAULT_LOCAL_HOST;
-    public static final int DEFAULT_INFLUX_PORT = 8086;
-    public static final String DEFAULT_INFLUX_DB = "electricity";
+    private static final String DEFAULT_LOCAL_HOST = "localhost";
+    private static final String DEFAULT_INFLUX_URL = "http://" + DEFAULT_LOCAL_HOST;
+    private static final int DEFAULT_INFLUX_PORT = 8086;
+    private static final String DEFAULT_INFLUX_DB = "electricity";
 
-    public static final String DEFAULT_LOG_FILE =
+    private static final String DEFAULT_LOG_FILE =
             Paths.get("application.log").toAbsolutePath().toString();
 
-    public static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
+    private static final Integer DEFAULT_SLEEP = 5;
+
+    private static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
 
     static {
         REQUIRED_PARAMETERS
-                .addAll(Arrays.asList(REGION, CLIENTAPP_ID, POOL_ID, USERNAME, PASSWORD));
+                .addAll(Arrays.asList(REGION, CLIENTAPP_ID, POOL_ID, USERNAME, PASSWORD, SLEEP));
     }
 
     private static final String API_URL = "https://api.emporiaenergy.com";
@@ -122,6 +129,9 @@ public class EmporiaDownloader {
                         "configuration file [" + DEFAULT_CONFIGURATION_FILE + "] (CLI "
                                 + "parameters override configured parameters!)").withRequiredArg()
                         .ofType(String.class).defaultsTo(DEFAULT_CONFIGURATION_FILE);
+
+                accepts(SLEEP, "number of minutes to sleep between cycles [" + DEFAULT_SLEEP +
+                        "]").withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
 
                 accepts(REGION, "AWS region").withRequiredArg().ofType(String.class);
                 accepts(CLIENTAPP_ID, "AWS client ID").withRequiredArg().ofType(String.class);
@@ -175,6 +185,18 @@ public class EmporiaDownloader {
 
         LoggingConfigurator.configure(configuration);
 
+        if (log.isDebugEnabled()) {
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
+            ConfigurationUtils.dump(configuration, printWriter);
+            printWriter.flush();
+            String conf = stringWriter.toString();
+            conf = conf.replaceAll("password=[^\\n]+", "password=*****");
+            conf = conf.replaceAll("\\n", ", ");
+            log.debug("configuration: " + conf);
+        }
+
         EmporiaDownloader downloader = new EmporiaDownloader(configuration);
         downloader.run();
     }
@@ -205,7 +227,7 @@ public class EmporiaDownloader {
         }
 
         for (String option : REQUIRED_PARAMETERS) {
-            if (!config.containsKey(option)) {
+            if (!config.containsKey(option) || config.getProperty(option) == null) {
                 Object value = optionSet.valueOf(option);
                 if (value == null) {
                     throw new ConfigurationException("Missing parameter " + option);
@@ -260,12 +282,8 @@ public class EmporiaDownloader {
             }
 
             InfluxDBLoader finalInfluxDBLoader = influxDBLoader;
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    Objects.requireNonNull(finalInfluxDBLoader).writeToDB();
-                }
-            });
+            Runtime.getRuntime().addShutdownHook(
+                    new Thread(() -> Objects.requireNonNull(finalInfluxDBLoader).writeToDB()));
 
             for (Device device : customer.getDevices()) {
                 loadChannelData(device, influxDBLoader);
@@ -288,7 +306,7 @@ public class EmporiaDownloader {
             }
 
             try {
-                Thread.sleep(1000 * 60 * 5);
+                Thread.sleep(1000 * 60 * configuration.getInt(SLEEP));
             } catch (InterruptedException e) {
                 log.warn("Interrupt: " + e.getMessage());
                 break;
