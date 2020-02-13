@@ -37,7 +37,7 @@
                     <RollingFile
                             name="APPLICATION LOG"
                             fileName="application.log"
-                            filePattern="${LOG_DIR}/application.%d{yyyy-MM-dd}.log.gz"
+                            filePattern="application.%d{yyyy-MM-dd}.log.gz"
                             ignoreExceptions="false">
                         <PatternLayout pattern="${LOG_PATTERN}"/>
                         <Policies>
@@ -50,7 +50,7 @@
                     <RollingFile
                             name="APPLICATION LOG"
                             fileName="${main:0}"
-                            filePattern="${LOG_DIR}/${main:0}.%d{yyyy-MM-dd}.gz"
+                            filePattern="${main:0}.%d{yyyy-MM-dd}.gz"
                             ignoreExceptions="false">
                         <PatternLayout pattern="${LOG_PATTERN}"/>
                         <Policies>

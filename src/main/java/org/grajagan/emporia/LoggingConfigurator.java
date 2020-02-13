@@ -22,7 +22,6 @@ package org.grajagan.emporia;
  * #L%
  */
 
-import joptsimple.OptionSet;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -41,11 +40,11 @@ public class LoggingConfigurator {
 
     public static void configure(org.apache.commons.configuration.Configuration configuration) {
         MainMapLookup.setMainArguments(configuration.getString(LOGFILE));
-        if (configuration.containsKey(DEBUG)) {
+        if (configuration.getBoolean(DEBUG, false)) {
             Configurator.setLevel("org.grajagan", Level.DEBUG);
         }
 
-        if (configuration.containsKey(QUIET)) {
+        if (configuration.getBoolean(QUIET, true)) {
             Configurator.setRootLevel(Level.OFF);
             final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
             final Configuration config = ctx.getConfiguration();
