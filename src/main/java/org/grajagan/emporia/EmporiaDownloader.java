@@ -80,8 +80,6 @@ public class EmporiaDownloader {
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
 
-    private static final String CUSTOMER_EMAIL = "customer";
-
     private static final String INFLUX_URL = "influx-url";
     private static final String INFLUX_PORT = "influx-port";
     private static final String INFLUX_USER = "influx-user";
@@ -139,9 +137,6 @@ public class EmporiaDownloader {
 
                 accepts(USERNAME, "username").withRequiredArg().ofType(String.class);
                 accepts(PASSWORD, "password").withRequiredArg().ofType(String.class);
-
-                accepts(CUSTOMER_EMAIL, "customer email [defaults to username]").withRequiredArg()
-                        .ofType(String.class);
 
                 accepts(INFLUX_URL, "InfluxDB server URL").withRequiredArg().ofType(String.class)
                         .defaultsTo(DEFAULT_INFLUX_URL);
@@ -258,8 +253,7 @@ public class EmporiaDownloader {
                 authenticationManager);
 
         initClient(clientConfig);
-        Customer customer = getCustomer(configuration.containsKey(CUSTOMER_EMAIL) ?
-                configuration.getString(CUSTOMER_EMAIL) : configuration.getString(USERNAME));
+        Customer customer = getCustomer(configuration.getString(USERNAME));
 
         if (customer.getDevices() == null || customer.getDevices().isEmpty()) {
             log.warn("Customer " + customer + " has no devices!");
