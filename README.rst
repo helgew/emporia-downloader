@@ -17,7 +17,7 @@ Usage
 Compilation
 -----------
 
-Generate the executable jar (it will be saved to the `dist/` directory in the project directory) using the command '``mvn package``'.
+Generate the executable jar (it will be saved to the ``dist/`` directory in the project directory) using the command '``mvn package``'.
 
 Running
 -----------
@@ -38,7 +38,7 @@ The executable jar can be run with the following options::
     --influx-port <Integer>     InfluxDB server port (default: 8086)               
     --influx-url <String>       InfluxDB server URL (default: http://localhost)    
     --influx-user <String>      InfluxDB server username                           
-    --logfile [String]          log to this file                                   
+    --logfile <String>          log to this file                                   
                                   (default: <project dir>/application.log)                      
     --password <String>         password                                           
     --pool-id <String>          AWS user pool ID                                   
