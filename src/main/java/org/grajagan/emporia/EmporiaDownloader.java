@@ -22,6 +22,8 @@ package org.grajagan.emporia;
  * #L%
  */
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -87,6 +89,8 @@ public class EmporiaDownloader {
     private static final String INFLUX_DB = "influx-db";
     private static final String DISABLE_INFLUX = "disable-influx";
 
+    private static final String RAW = "raw";
+
     private static final String SLEEP = "sleep";
 
     private static final String DEFAULT_CONFIGURATION_FILE =
@@ -149,6 +153,8 @@ public class EmporiaDownloader {
                 accepts(INFLUX_DB, "InfluxDB database").withRequiredArg().ofType(String.class)
                         .defaultsTo(DEFAULT_INFLUX_DB);
                 accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
+
+                accepts(RAW, "output raw JSON readings to STDOUT");
 
                 accepts(LoggingConfigurator.LOGFILE, "log to this file [" + DEFAULT_LOG_FILE + "]")
                         .withOptionalArg().defaultsTo(DEFAULT_LOG_FILE);
@@ -335,11 +341,22 @@ public class EmporiaDownloader {
 
             Instant now = Instant.now();
             Instant end = now.minus(1, ChronoUnit.MILLIS);
+
+            ObjectMapper mapper = new ObjectMapper();
+
             while (end.isBefore(now)) {
                 log.debug("channel: " + channel + " " + start + " - " + end);
                 Readings readings = getReadings(channel, start, end);
                 if (influxDBLoader != null) {
                     influxDBLoader.save(readings);
+                }
+
+                if (configuration.getBoolean(RAW, false)) {
+                    try {
+                        System.out.println(mapper.writeValueAsString(readings));
+                    } catch (JsonProcessingException e) {
+                        log.error("Cannot convert readings to JSON", e);
+                    }
                 }
 
                 log.debug(readings);

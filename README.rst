@@ -44,7 +44,8 @@ The executable jar can be run with the following options::
     --pool-id <String>          AWS user pool ID                                   
     -q, --quiet                 do not print any messages to the console except for
                                   errors.                                          
-    --region <String>           AWS region                                         
+    --raw                       output raw JSON readings to STDOUT                 
+    --region <String>           AWS region
     --sleep <Integer>           number of minutes to sleep between cycles [5]      
                                   (default: 5)                                     
     --username <String>         username        
