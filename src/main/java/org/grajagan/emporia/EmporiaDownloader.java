@@ -261,7 +261,7 @@ public class EmporiaDownloader {
         }
 
         InfluxDBLoader influxDBLoader = null;
-        if (!configuration.containsKey(DISABLE_INFLUX)) {
+        if (!configuration.getBoolean(DISABLE_INFLUX, false)) {
             URI influxDbUri = null;
             try {
                 influxDbUri = new URI((String) configuration.getString(INFLUX_URL));
