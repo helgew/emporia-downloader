@@ -39,6 +39,7 @@ import org.grajagan.emporia.influxdb.InfluxDBLoader;
 import org.grajagan.emporia.model.Channel;
 import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Device;
+import org.grajagan.emporia.model.Maintenance;
 import org.grajagan.emporia.model.Readings;
 
 import javax.net.ssl.HostnameVerifier;
@@ -291,6 +292,20 @@ public class EmporiaDownloader {
 
     protected void run() {
         log.info("Starting run!");
+
+        ClientConfig clientConfig = new ClientConfig();
+
+        // we init twice to avoid logging in if API is down
+        initClient(clientConfig);
+
+        Maintenance maintenance =
+                (Maintenance) getObject(Maintenance.TARGET_URL, Maintenance.class);
+
+        if (maintenance.getMsg() != null && maintenance.getMsg().equals("down")) {
+            log.warn("API endpoint is down for maintenance");
+            System.exit(0);
+        }
+        
         CognitoAuthenticationManager authenticationManager =
                 CognitoAuthenticationManager.builder().username(configuration.getString(USERNAME))
                         .password(configuration.getString(PASSWORD))
@@ -298,12 +313,12 @@ public class EmporiaDownloader {
                         .region(configuration.getString(REGION))
                         .clientId(configuration.getString(CLIENTAPP_ID)).build();
 
-        ClientConfig clientConfig = new ClientConfig();
         clientConfig.register(AuthTokenClientRequestFilter.class);
         clientConfig.property(AuthTokenClientRequestFilter.AUTHENTICATION_MANAGER,
                 authenticationManager);
 
         initClient(clientConfig);
+
         Customer customer = getCustomer(configuration.getString(USERNAME));
 
         if (customer.getDevices() == null || customer.getDevices().isEmpty()) {
