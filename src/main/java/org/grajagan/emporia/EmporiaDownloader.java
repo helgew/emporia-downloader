@@ -10,12 +10,12 @@ package org.grajagan.emporia;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -59,8 +59,10 @@ import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -90,6 +92,7 @@ public class EmporiaDownloader {
     private static final String DISABLE_INFLUX = "disable-influx";
 
     private static final String RAW = "raw";
+    private static final String OFFSET = "offset";
 
     private static final String SLEEP = "sleep";
 
@@ -105,6 +108,8 @@ public class EmporiaDownloader {
             Paths.get("application.log").toAbsolutePath().toString();
 
     private static final Integer DEFAULT_SLEEP = 5;
+
+    private static final String DEFAULT_OFFSET = "3h";
 
     private static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
 
@@ -132,8 +137,8 @@ public class EmporiaDownloader {
                                 + "parameters override configured parameters!)").withRequiredArg()
                         .ofType(String.class).defaultsTo(DEFAULT_CONFIGURATION_FILE);
 
-                accepts(SLEEP, "number of minutes to sleep between cycles [" + DEFAULT_SLEEP +
-                        "]").withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
+                accepts(SLEEP, "number of minutes to sleep between cycles [" + DEFAULT_SLEEP + "]")
+                        .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
 
                 accepts(REGION, "AWS region").withRequiredArg().ofType(String.class);
                 accepts(CLIENTAPP_ID, "AWS client ID").withRequiredArg().ofType(String.class);
@@ -156,6 +161,11 @@ public class EmporiaDownloader {
 
                 accepts(RAW, "output raw JSON readings to STDOUT");
 
+                accepts(OFFSET,
+                        "time offset if no prior data is available (number plus time unit; one "
+                                + "of 's', 'm', or 'h')").withRequiredArg()
+                        .defaultsTo(DEFAULT_OFFSET);
+
                 accepts(LoggingConfigurator.LOGFILE, "log to this file [" + DEFAULT_LOG_FILE + "]")
                         .withOptionalArg().defaultsTo(DEFAULT_LOG_FILE);
 
@@ -174,6 +184,15 @@ public class EmporiaDownloader {
         if (!options.has(DISABLE_INFLUX)) {
             REQUIRED_PARAMETERS.add(INFLUX_DB);
             REQUIRED_PARAMETERS.add(INFLUX_PORT);
+        }
+
+        if (options.has(OFFSET)) {
+            try {
+                TemporalAmount amount = parseOffset(options.valueOf(OFFSET).toString());
+            } catch (ConfigurationException e) {
+                printHelp(parser);
+                System.exit(1);
+            }
         }
 
         Configuration configuration = null;
@@ -202,6 +221,29 @@ public class EmporiaDownloader {
         downloader.run();
     }
 
+    private static TemporalAmount parseOffset(String offset) throws ConfigurationException {
+        TemporalAmount amount = null;
+        try {
+            String unit = offset.substring(offset.length() - 1).toLowerCase();
+            Long value = Long.parseLong(offset.substring(0, offset.length() - 1));
+            switch (unit) {
+                case "s":
+                    amount = Duration.ofSeconds(value);
+                    break;
+                case "m":
+                    amount = Duration.ofMinutes(value);
+                    break;
+                case "h":
+                    amount = Duration.ofHours(value);
+                    break;
+            }
+        } catch (Exception e) {
+            throw new ConfigurationException(e.getMessage(), e);
+        }
+
+        return amount;
+    }
+
     private static void printHelp(OptionParser parser) {
         try {
             parser.printHelpOn(System.out);
@@ -223,6 +265,9 @@ public class EmporiaDownloader {
             }
 
             for (Object value : optionSet.valuesOf(optionSpec)) {
+                if (property.equals(OFFSET)) {
+                    value = parseOffset(value.toString());
+                }
                 config.addProperty(property, value);
             }
         }
@@ -335,7 +380,7 @@ public class EmporiaDownloader {
             if (lastDataPoint.containsKey(channel)) {
                 start = lastDataPoint.get(channel);
             } else {
-                start = Instant.now().minus(12, ChronoUnit.HOURS);
+                start = Instant.now().minus((TemporalAmount) configuration.getProperty(OFFSET));
                 lastDataPoint.put(channel, start);
             }
 

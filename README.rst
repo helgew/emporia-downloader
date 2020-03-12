@@ -40,7 +40,10 @@ The executable jar can be run with the following options::
     --influx-user <String>      InfluxDB server username                           
     --logfile <String>          log to this file                                   
                                   (default: <project dir>/application.log)                      
-    --password <String>         password                                           
+    --offset <String>           time offset if no prior data is available (number
+                                  plus time unit; one of 's', 'm', or 'h')
+                                  (default: 3h)
+    --password <String>         password
     --pool-id <String>          AWS user pool ID                                   
     -q, --quiet                 do not print any messages to the console except for
                                   errors.                                          
