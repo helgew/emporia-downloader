@@ -66,7 +66,9 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -113,7 +115,7 @@ public class EmporiaDownloader {
 
     private static final Integer DEFAULT_SLEEP = 5;
 
-    private static final String DEFAULT_OFFSET = "3h";
+    private static final TemporalAmount DEFAULT_OFFSET = new CommandLineTemporalUnit();
 
     private static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
 
@@ -135,11 +137,11 @@ public class EmporiaDownloader {
                 accepts(HELP_ARG, "display help text");
 
                 accepts(CONFIGURATION_FILE,
-                        "configuration file [" + DEFAULT_CONFIGURATION_FILE + "] (CLI "
-                                + "parameters override configured parameters!)").withRequiredArg()
+                        "configuration file; CLI "
+                                + "parameters override configured parameters!").withRequiredArg()
                         .ofType(String.class).defaultsTo(DEFAULT_CONFIGURATION_FILE);
 
-                accepts(SLEEP, "number of minutes to sleep between cycles [" + DEFAULT_SLEEP + "]")
+                accepts(SLEEP, "number of minutes to sleep between cycles")
                         .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
 
                 accepts(REGION, "AWS region").withRequiredArg().ofType(String.class);
@@ -166,9 +168,9 @@ public class EmporiaDownloader {
                 accepts(OFFSET,
                         "time offset if no prior data is available (number plus time unit; one "
                                 + "of 's', 'm', or 'h')").withRequiredArg()
-                        .defaultsTo(DEFAULT_OFFSET).withValuesConvertedBy(new OffsetConverter());
+                        .withValuesConvertedBy(new OffsetConverter()).defaultsTo(DEFAULT_OFFSET);
 
-                accepts(LoggingConfigurator.LOGFILE, "log to this file [" + DEFAULT_LOG_FILE + "]")
+                accepts(LoggingConfigurator.LOGFILE, "log to this file")
                         .withOptionalArg().defaultsTo(DEFAULT_LOG_FILE);
 
                 acceptsAll(asList("d", LoggingConfigurator.DEBUG), "enable debug messages.");
