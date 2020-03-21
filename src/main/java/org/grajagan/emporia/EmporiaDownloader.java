@@ -27,48 +27,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import joptsimple.ValueConverter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.ConfigurationUtils;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
-import org.grajagan.aws.AuthTokenClientRequestFilter;
-import org.grajagan.aws.CognitoAuthenticationManager;
+import org.grajagan.emporia.api.EmporiaAPIService;
 import org.grajagan.emporia.influxdb.InfluxDBLoader;
 import org.grajagan.emporia.model.Channel;
 import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Device;
-import org.grajagan.emporia.model.Maintenance;
 import org.grajagan.emporia.model.Readings;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Paths;
-import java.security.SecureRandom;
 import java.security.Security;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -83,12 +62,6 @@ public class EmporiaDownloader {
     private static final String HELP_ARG = "help";
 
     private static final String CONFIGURATION_FILE = "config";
-
-    private static final String REGION = "region";
-    private static final String CLIENTAPP_ID = "clientapp-id";
-    private static final String POOL_ID = "pool-id";
-    private static final String USERNAME = "username";
-    private static final String PASSWORD = "password";
 
     private static final String INFLUX_URL = "influx-url";
     private static final String INFLUX_PORT = "influx-port";
@@ -121,14 +94,16 @@ public class EmporiaDownloader {
 
     static {
         REQUIRED_PARAMETERS.addAll(Arrays
-                .asList(REGION, CLIENTAPP_ID, POOL_ID, USERNAME, PASSWORD, SLEEP, OFFSET));
+                .asList(EmporiaAPIService.REGION, EmporiaAPIService.CLIENTAPP_ID,
+                        EmporiaAPIService.POOL_ID, EmporiaAPIService.USERNAME,
+                        EmporiaAPIService.PASSWORD, SLEEP, OFFSET));
     }
-
-    private static final String API_URL = "https://api.emporiaenergy.com";
 
     private Configuration configuration;
 
     private Map<Channel, Instant> lastDataPoint = new HashMap<>();
+
+    private EmporiaAPIService service;
 
     public static void main(String[] argv) throws Exception {
 
@@ -144,12 +119,12 @@ public class EmporiaDownloader {
                 accepts(SLEEP, "number of minutes to sleep between cycles")
                         .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
 
-                accepts(REGION, "AWS region").withRequiredArg().ofType(String.class);
-                accepts(CLIENTAPP_ID, "AWS client ID").withRequiredArg().ofType(String.class);
-                accepts(POOL_ID, "AWS user pool ID").withRequiredArg().ofType(String.class);
+                accepts(EmporiaAPIService.REGION, "AWS region").withRequiredArg().ofType(String.class);
+                accepts(EmporiaAPIService.CLIENTAPP_ID, "AWS client ID").withRequiredArg().ofType(String.class);
+                accepts(EmporiaAPIService.POOL_ID, "AWS user pool ID").withRequiredArg().ofType(String.class);
 
-                accepts(USERNAME, "username").withRequiredArg().ofType(String.class);
-                accepts(PASSWORD, "password").withRequiredArg().ofType(String.class);
+                accepts(EmporiaAPIService.USERNAME, "username").withRequiredArg().ofType(String.class);
+                accepts(EmporiaAPIService.PASSWORD, "password").withRequiredArg().ofType(String.class);
 
                 accepts(INFLUX_URL, "InfluxDB server URL").withRequiredArg().ofType(String.class)
                         .defaultsTo(DEFAULT_INFLUX_URL);
@@ -267,24 +242,11 @@ public class EmporiaDownloader {
     protected void run() {
         log.info("Starting run!");
 
-        CognitoAuthenticationManager authenticationManager =
-                CognitoAuthenticationManager.builder().username(configuration.getString(USERNAME))
-                        .password(configuration.getString(PASSWORD))
-                        .poolId(configuration.getString(POOL_ID))
-                        .region(configuration.getString(REGION))
-                        .clientId(configuration.getString(CLIENTAPP_ID)).build();
+        service = new EmporiaAPIService(configuration);
 
-        ClientConfig clientConfig = new ClientConfig();
+        Customer customer = service.getCustomer();
 
-        clientConfig.register(AuthTokenClientRequestFilter.class);
-        clientConfig.property(AuthTokenClientRequestFilter.AUTHENTICATION_MANAGER,
-                authenticationManager);
-
-        Client sslClient = initClient(clientConfig, true);
-
-        Customer customer = getCustomer(sslClient, configuration.getString(USERNAME));
-
-        if (customer.getDevices() == null || customer.getDevices().isEmpty()) {
+        if (customer == null || customer.getDevices() == null || customer.getDevices().isEmpty()) {
             log.warn("Customer " + customer + " has no devices!");
             System.exit(0);
         }
@@ -316,30 +278,20 @@ public class EmporiaDownloader {
             }
         }
 
-        Client httpClient = initClient(new ClientConfig(), false);
-
         while (true) {
-            try {
-                Maintenance maintenance =
-                        (Maintenance) getObject(httpClient, Maintenance.TARGET_URL,
-                                Maintenance.class);
-
-                if (maintenance.getMsg() != null && maintenance.getMsg().equals("down")) {
-                    log.warn("API endpoint is down for maintenance; pausing.");
-                    if (!sleep()) {
-                        break;
-                    } else {
-                        continue;
-                    }
+            if (service.isDownForMaintenance()) {
+                log.warn("Service is down for maintenance. Stand by!");
+                if (!sleep()) {
+                    break;
+                } else {
+                    continue;
                 }
-            } catch (MessageBodyProviderNotFoundException e) {
-                // not sure why they can't send back a decent response when all is working
             }
 
             for (Device device : customer.getDevices()) {
-                processDevice(sslClient, device, influxDBLoader);
+                processDevice(device, influxDBLoader);
                 for (Device attachedDevice : device.getDevices()) {
-                    processDevice(sslClient, attachedDevice, influxDBLoader);
+                    processDevice(attachedDevice, influxDBLoader);
                 }
             }
 
@@ -379,7 +331,7 @@ public class EmporiaDownloader {
         }
     }
 
-    protected void processDevice(Client client, Device device, InfluxDBLoader influxDBLoader) {
+    protected void processDevice(Device device, InfluxDBLoader influxDBLoader) {
         Instant start;
         for (Channel channel : device.getChannels()) {
             if (lastDataPoint.containsKey(channel)) {
@@ -396,7 +348,7 @@ public class EmporiaDownloader {
 
             while (end.isBefore(now)) {
                 log.debug("channel: " + channel + " " + start + " - " + end);
-                Readings readings = getReadings(client, channel, start, end);
+                Readings readings = service.getReadings(channel, start, end);
                 if (influxDBLoader != null) {
                     influxDBLoader.save(readings);
                 }
@@ -419,77 +371,6 @@ public class EmporiaDownloader {
                     break;
                 }
             }
-        }
-    }
-
-    protected Customer getCustomer(Client client, String email) {
-        String url = API_URL + "/customers?email=" + email;
-        Customer customer = (Customer) getObject(client, url, Customer.class);
-
-        url = API_URL + "/customers/" + customer.getCustomerGid()
-                + "/devices?detailed=true&hierarchy=true";
-
-        customer.setDevices(((Customer) getObject(client, url, Customer.class)).getDevices());
-        return customer;
-    }
-
-    protected Readings getReadings(Client client, Channel channel, Instant start, Instant end) {
-        String url = API_URL + "/usage/time?start=%s&end=%s&type=%s&deviceGid=%d&scale"
-                + "=%s&unit=%s&channels=%s";
-        url = String.format(url, start, end, Readings.DEFAULT_TYPE, channel.getDeviceGid(),
-                Readings.DEFAULT_SCALE, Readings.DEFAULT_UNIT, channel.getChannelNum());
-        Readings readings = (Readings) getObject(client, url, Readings.class);
-        readings.setChannel(channel);
-        return readings;
-    }
-
-    protected Object getObject(Client client, String url, Class<?> clazz) {
-        WebTarget target = client.target(url);
-        Invocation.Builder builder = target.request();
-        Response response = builder.get();
-        return response.readEntity(clazz);
-    }
-
-    protected Client initClient(ClientConfig config, boolean doSSL) {
-        ClientBuilder builder =
-                ClientBuilder.newBuilder().withConfig(config).register(JacksonConfig.class);
-
-        if (doSSL) {
-            SSLContext ctx = null;
-            try {
-                ctx = SSLContext.getInstance("SSL");
-                ctx.init(null, certs, new SecureRandom());
-            } catch (Exception e) {
-                log.error("Cannot init context!", e);
-                System.exit(1);
-            }
-
-            builder.hostnameVerifier(new TrustAllHostNameVerifier()).sslContext(ctx);
-        }
-
-        return builder.build();
-    }
-
-    TrustManager[] certs = new TrustManager[] { new X509TrustManager() {
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {
-        }
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {
-        }
-    } };
-
-    public static class TrustAllHostNameVerifier implements HostnameVerifier {
-        public boolean verify(String hostname, SSLSession session) {
-            return true;
         }
     }
 }

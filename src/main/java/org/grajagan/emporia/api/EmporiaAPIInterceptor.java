@@ -1,4 +1,4 @@
-package org.grajagan.emporia.model;
+package org.grajagan.emporia.api;
 
 /*-
  * #%L
@@ -22,17 +22,26 @@ package org.grajagan.emporia.model;
  * #L%
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import okhttp3.Interceptor;
+import okhttp3.Request;
+import org.grajagan.aws.CognitoAuthenticationManager;
+
+import java.io.IOException;
 
 @Data
-@NoArgsConstructor
-@ToString
-@JsonPOJOBuilder(withPrefix = "")
-public class Maintenance {
-    public static final String TARGET_URL = "http://s3.amazonaws.com"
-            + "/com.emporiaenergy.manual.ota/maintenance/maintenance.json";
-    String msg;
+public class EmporiaAPIInterceptor implements Interceptor {
+    private final CognitoAuthenticationManager authenticationManager;
+
+    @Override
+    public okhttp3.Response intercept(Chain chain) throws IOException {
+        Request original = chain.request();
+
+        Request request = original.newBuilder()
+                .header("User-Agent", "Dart/2.5 (dart:io)")
+                .header("authtoken", authenticationManager.getIdentityToken())
+                .method(original.method(), original.body()).build();
+
+        return chain.proceed(request);
+    }
 }
