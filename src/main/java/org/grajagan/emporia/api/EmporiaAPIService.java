@@ -80,14 +80,17 @@ public class EmporiaAPIService {
 
     public boolean isDownForMaintenance() {
         Request request = new Request.Builder().url(MAINTENANCE_URL).build();
+        boolean downForMaintenance = false;
+
         try {
             Response response = simpleClient.newCall(request).execute();
-            return response.isSuccessful();
+            downForMaintenance = response.isSuccessful();
+            response.body().close();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.warn("Exception while checking for maintenance!", e);
         }
 
-        return false;
+        return downForMaintenance;
     }
 
     public Customer getCustomer() {
