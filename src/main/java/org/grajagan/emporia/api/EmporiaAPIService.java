@@ -110,6 +110,7 @@ public class EmporiaAPIService {
         Readings readings = null;
         try {
             readings = readingsCall.execute().body();
+            readings.setChannel(channel);
         } catch (IOException e) {
             log.error("Cannot get readings!", e);
         }
