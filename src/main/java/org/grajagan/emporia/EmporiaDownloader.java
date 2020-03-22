@@ -112,19 +112,24 @@ public class EmporiaDownloader {
                 accepts(HELP_ARG, "display help text");
 
                 accepts(CONFIGURATION_FILE,
-                        "configuration file; CLI "
-                                + "parameters override configured parameters!").withRequiredArg()
-                        .ofType(String.class).defaultsTo(DEFAULT_CONFIGURATION_FILE);
+                        "configuration file; CLI " + "parameters override configured parameters!")
+                        .withRequiredArg().ofType(String.class)
+                        .defaultsTo(DEFAULT_CONFIGURATION_FILE);
 
-                accepts(SLEEP, "number of minutes to sleep between cycles")
-                        .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
+                accepts(SLEEP, "number of minutes to sleep between cycles").withRequiredArg()
+                        .ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
 
-                accepts(EmporiaAPIService.REGION, "AWS region").withRequiredArg().ofType(String.class);
-                accepts(EmporiaAPIService.CLIENTAPP_ID, "AWS client ID").withRequiredArg().ofType(String.class);
-                accepts(EmporiaAPIService.POOL_ID, "AWS user pool ID").withRequiredArg().ofType(String.class);
+                accepts(EmporiaAPIService.REGION, "AWS region").withRequiredArg()
+                        .ofType(String.class);
+                accepts(EmporiaAPIService.CLIENTAPP_ID, "AWS client ID").withRequiredArg()
+                        .ofType(String.class);
+                accepts(EmporiaAPIService.POOL_ID, "AWS user pool ID").withRequiredArg()
+                        .ofType(String.class);
 
-                accepts(EmporiaAPIService.USERNAME, "username").withRequiredArg().ofType(String.class);
-                accepts(EmporiaAPIService.PASSWORD, "password").withRequiredArg().ofType(String.class);
+                accepts(EmporiaAPIService.USERNAME, "username").withRequiredArg()
+                        .ofType(String.class);
+                accepts(EmporiaAPIService.PASSWORD, "password").withRequiredArg()
+                        .ofType(String.class);
 
                 accepts(INFLUX_URL, "InfluxDB server URL").withRequiredArg().ofType(String.class)
                         .defaultsTo(DEFAULT_INFLUX_URL);
@@ -145,8 +150,8 @@ public class EmporiaDownloader {
                                 + "of 's', 'm', or 'h')").withRequiredArg()
                         .withValuesConvertedBy(new OffsetConverter()).defaultsTo(DEFAULT_OFFSET);
 
-                accepts(LoggingConfigurator.LOGFILE, "log to this file")
-                        .withOptionalArg().defaultsTo(DEFAULT_LOG_FILE);
+                accepts(LoggingConfigurator.LOGFILE, "log to this file").withOptionalArg()
+                        .defaultsTo(DEFAULT_LOG_FILE);
 
                 acceptsAll(asList("d", LoggingConfigurator.DEBUG), "enable debug messages.");
                 acceptsAll(asList("q", LoggingConfigurator.QUIET),
@@ -244,6 +249,11 @@ public class EmporiaDownloader {
 
         service = new EmporiaAPIService(configuration);
 
+        if (service.isDownForMaintenance()) {
+            log.warn("Service is down for maintenance. Exciting!");
+            System.exit(0);
+        }
+
         Customer customer = service.getCustomer();
 
         if (customer == null || customer.getDevices() == null || customer.getDevices().isEmpty()) {
@@ -279,15 +289,6 @@ public class EmporiaDownloader {
         }
 
         while (true) {
-            if (service.isDownForMaintenance()) {
-                log.warn("Service is down for maintenance. Stand by!");
-                if (!sleep()) {
-                    break;
-                } else {
-                    continue;
-                }
-            }
-
             for (Device device : customer.getDevices()) {
                 processDevice(device, influxDBLoader);
                 for (Device attachedDevice : device.getDevices()) {
@@ -299,8 +300,15 @@ public class EmporiaDownloader {
                 log.info("current write count: " + influxDBLoader.getWritesCount());
             }
 
-            if (!sleep()) {
+            if (cannotSleep()) {
                 break;
+            }
+
+            if (service.isDownForMaintenance()) {
+                log.warn("Service is down for maintenance. Stand by!");
+                if (cannotSleep()) {
+                    break;
+                }
             }
         }
 
@@ -309,15 +317,15 @@ public class EmporiaDownloader {
         }
     }
 
-    private boolean sleep() {
+    private boolean cannotSleep() {
         try {
             Thread.sleep(1000 * 60 * configuration.getInt(SLEEP));
         } catch (InterruptedException e) {
             log.warn("Interrupt: " + e.getMessage());
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     private void loadChannelData(Device device, InfluxDBLoader influxDBLoader) {
@@ -349,6 +357,16 @@ public class EmporiaDownloader {
             while (end.isBefore(now)) {
                 log.debug("channel: " + channel + " " + start + " - " + end);
                 Readings readings = service.getReadings(channel, start, end);
+
+                if (readings == null || readings.getUsage().size() == 0
+                        || readings.getStart().equals(readings.getEnd())) {
+                    log.warn("Received empty/null readings. Skipping channel for now!");
+                    log.warn("Readings: " + readings);
+                    break;
+                }
+
+                log.debug("Readings: " + readings);
+
                 if (influxDBLoader != null) {
                     influxDBLoader.save(readings);
                 }
@@ -361,15 +379,14 @@ public class EmporiaDownloader {
                     }
                 }
 
-                log.debug(readings);
-                if (readings.getEnd() != null) {
-                    start = readings.getEnd();
-                    lastDataPoint.put(channel, start);
-                    end = start.plus(start.toEpochMilli() - readings.getStart().toEpochMilli(),
-                            ChronoUnit.MILLIS);
-                } else {
+                if (readings.getEnd() == null || readings.getStart().equals(readings.getEnd())) {
                     break;
                 }
+
+                start = readings.getEnd();
+                lastDataPoint.put(channel, start);
+                end = start.plus(start.toEpochMilli() - readings.getStart().toEpochMilli(),
+                        ChronoUnit.MILLIS);
             }
         }
     }

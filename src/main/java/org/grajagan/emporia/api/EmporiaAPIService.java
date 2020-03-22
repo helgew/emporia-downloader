@@ -36,8 +36,8 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-import java.io.IOException;
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 @Log4j2
 public class EmporiaAPIService {
@@ -63,10 +63,18 @@ public class EmporiaAPIService {
                         .region(configuration.getString(REGION))
                         .clientId(configuration.getString(CLIENTAPP_ID)).build();
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.addInterceptor(new EmporiaAPIInterceptor(authenticationManager));
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .callTimeout(2, TimeUnit.MINUTES)
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS);
 
-        OkHttpClient client = builder.build();
+        simpleClient = builder.build();
+
+        OkHttpClient client = simpleClient.newBuilder()
+                .addInterceptor(new EmporiaAPIInterceptor(authenticationManager))
+                .build();
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(API_URL)
                 .addConverterFactory(JacksonConverterFactory.create(new JacksonObjectMapper()))
@@ -75,7 +83,6 @@ public class EmporiaAPIService {
 
         emporiaAPI = retrofit.create(EmporiaAPI.class);
         username = configuration.getString(USERNAME);
-        simpleClient = new OkHttpClient.Builder().build();
     }
 
     public boolean isDownForMaintenance() {
@@ -85,8 +92,10 @@ public class EmporiaAPIService {
         try {
             Response response = simpleClient.newCall(request).execute();
             downForMaintenance = response.isSuccessful();
-            response.body().close();
-        } catch (IOException e) {
+            if (response.body() != null) {
+                response.body().close();
+            }
+        } catch (Exception e) {
             log.warn("Exception while checking for maintenance!", e);
         }
 
@@ -98,9 +107,11 @@ public class EmporiaAPIService {
         Customer customer = null;
         try {
             customer = customerCall.execute().body();
-            customerCall = emporiaAPI.getCustomer(customer.getCustomerGid());
-            customer = customerCall.execute().body();
-        } catch (IOException e) {
+            if (customer != null) {
+                customerCall = emporiaAPI.getCustomer(customer.getCustomerGid());
+                customer = customerCall.execute().body();
+            }
+        } catch (Exception e) {
             log.error("Cannot get customer!", e);
         }
 
@@ -113,8 +124,10 @@ public class EmporiaAPIService {
         Readings readings = null;
         try {
             readings = readingsCall.execute().body();
-            readings.setChannel(channel);
-        } catch (IOException e) {
+            if (readings != null) {
+                readings.setChannel(channel);
+            }
+        } catch (Exception e) {
             log.error("Cannot get readings!", e);
         }
         return readings;
