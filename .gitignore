@@ -19,6 +19,8 @@ buildNumber.properties
 # Log file
 *.log
 *.log.gz
+*.json
+*.json.gz
 
 # BlueJ files
 *.ctxt

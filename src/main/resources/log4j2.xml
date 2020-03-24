@@ -24,14 +24,17 @@
 <Configuration>
     <Properties>
         <Property name="LOG_PATTERN">%d{dd MMM yyyy HH:mm:ss} - %-5p (%F:%L): %m%n</Property>
+        <Property name="RAW_PATTERN">{ "ts" : %d{UNIX}, "data": %m{nolookups} }%n</Property>
     </Properties>
-
     <Appenders>
         <Console name="CONSOLE" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
+        <Console name="STDOUT" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${RAW_PATTERN}"/>
+        </Console>
 
-        <Routing name="FILE">
+        <Routing name="LOG_FILE">
             <Routes pattern="$${main:0}">
                 <Route key="$${main:0}">
                     <RollingFile
@@ -61,17 +64,40 @@
                 </Route>
             </Routes>
         </Routing>
+        <Routing name="RAW_LOG">
+            <Routes pattern="$${main:1}">
+                <Route ref="STDOUT" key="$${main:1}"/>
+                <Route>
+                    <RollingFile
+                            name="RAW DATA LOG"
+                            fileName="${main:1}"
+                            filePattern="${main:1}.%d{yyyy-MM-dd}.gz"
+                            ignoreExceptions="false">
+                        <PatternLayout pattern="${RAW_PATTERN}"/>
+                        <Policies>
+                            <TimeBasedTriggeringPolicy/>
+                        </Policies>
+                        <DefaultRolloverStrategy max="5"/>
+                    </RollingFile>
+                </Route>
+            </Routes>
+        </Routing>
     </Appenders>
 
     <Loggers>
         <Logger name="org.grajagan" level="info" additivity="false">
             <AppenderRef ref="CONSOLE"/>
-            <AppenderRef ref="FILE"/>
+            <AppenderRef ref="LOG_FILE"/>
+        </Logger>
+
+        <Logger name="org.grajagan.emporia.api.LogJsonInterceptor" level="info"
+                additivity="false">
+            <AppenderRef ref="RAW_LOG"/>
         </Logger>
 
         <Root level="error">
             <AppenderRef ref="CONSOLE"/>
-            <AppenderRef ref="FILE"/>
+            <AppenderRef ref="LOG_FILE"/>
         </Root>
     </Loggers>
 

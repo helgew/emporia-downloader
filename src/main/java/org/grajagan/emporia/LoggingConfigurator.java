@@ -35,11 +35,13 @@ public class LoggingConfigurator {
     public static final String LOGFILE = "logfile";
     public static final String DEBUG = "debug";
     public static final String QUIET = "quiet";
+    public static final String RAW = "raw";
 
     private LoggingConfigurator() {}
 
     public static void configure(org.apache.commons.configuration.Configuration configuration) {
-        MainMapLookup.setMainArguments(configuration.getString(LOGFILE));
+        MainMapLookup.setMainArguments(configuration.getString(LOGFILE), configuration.getString(RAW));
+
         if (configuration.getBoolean(DEBUG, false)) {
             Configurator.setLevel("org.grajagan", Level.DEBUG);
         }
@@ -50,6 +52,10 @@ public class LoggingConfigurator {
             final Configuration config = ctx.getConfiguration();
             config.getLoggers().get("org.grajagan").removeAppender("CONSOLE");
             ctx.updateLoggers();
+        }
+
+        if (configuration.containsKey(RAW)) {
+            Configurator.setLevel("org.grajagan.emporia.api.LogJsonInterceptor", Level.TRACE);
         }
 
         log.debug("configured logging!");

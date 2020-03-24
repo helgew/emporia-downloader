@@ -22,8 +22,6 @@ package org.grajagan.emporia;
  * #L%
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -70,33 +68,38 @@ public class EmporiaDownloader {
     private static final String INFLUX_DB = "influx-db";
     private static final String DISABLE_INFLUX = "disable-influx";
 
-    private static final String RAW = "raw";
     private static final String OFFSET = "offset";
 
     private static final String SLEEP = "sleep";
 
-    private static final String DEFAULT_CONFIGURATION_FILE =
+    static final String DEFAULT_CONFIGURATION_FILE =
             Paths.get("config.properties").toAbsolutePath().toString();
 
-    private static final String DEFAULT_LOCAL_HOST = "localhost";
-    private static final String DEFAULT_INFLUX_URL = "http://" + DEFAULT_LOCAL_HOST;
-    private static final int DEFAULT_INFLUX_PORT = 8086;
-    private static final String DEFAULT_INFLUX_DB = "electricity";
+    static final String DEFAULT_LOCAL_HOST = "localhost";
+    static final String DEFAULT_INFLUX_URL = "http://" + DEFAULT_LOCAL_HOST;
+    static final int DEFAULT_INFLUX_PORT = 8086;
+    static final String DEFAULT_INFLUX_DB = "electricity";
 
-    private static final String DEFAULT_LOG_FILE =
+    static final String DEFAULT_LOG_FILE =
             Paths.get("application.log").toAbsolutePath().toString();
 
-    private static final Integer DEFAULT_SLEEP = 5;
+    static final String DEFAULT_RAW_LOG_FILE =
+            Paths.get("data.json").toAbsolutePath().toString();
+
+    static final Integer DEFAULT_SLEEP = 5;
 
     private static final TemporalAmount DEFAULT_OFFSET = new CommandLineTemporalUnit();
 
-    private static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
+    static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
+    static final List<String> HAS_DEFAULT_VALUES = new ArrayList<>();
 
     static {
         REQUIRED_PARAMETERS.addAll(Arrays
                 .asList(EmporiaAPIService.REGION, EmporiaAPIService.CLIENTAPP_ID,
                         EmporiaAPIService.POOL_ID, EmporiaAPIService.USERNAME,
-                        EmporiaAPIService.PASSWORD, SLEEP, OFFSET));
+                        EmporiaAPIService.PASSWORD));
+
+        HAS_DEFAULT_VALUES.addAll(Arrays.asList(SLEEP, OFFSET));
     }
 
     private Configuration configuration;
@@ -107,58 +110,7 @@ public class EmporiaDownloader {
 
     public static void main(String[] argv) throws Exception {
 
-        OptionParser parser = new OptionParser() {
-            {
-                accepts(HELP_ARG, "display help text");
-
-                accepts(CONFIGURATION_FILE,
-                        "configuration file; CLI " + "parameters override configured parameters!")
-                        .withRequiredArg().ofType(String.class)
-                        .defaultsTo(DEFAULT_CONFIGURATION_FILE);
-
-                accepts(SLEEP, "number of minutes to sleep between cycles").withRequiredArg()
-                        .ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
-
-                accepts(EmporiaAPIService.REGION, "AWS region").withRequiredArg()
-                        .ofType(String.class);
-                accepts(EmporiaAPIService.CLIENTAPP_ID, "AWS client ID").withRequiredArg()
-                        .ofType(String.class);
-                accepts(EmporiaAPIService.POOL_ID, "AWS user pool ID").withRequiredArg()
-                        .ofType(String.class);
-
-                accepts(EmporiaAPIService.USERNAME, "username").withRequiredArg()
-                        .ofType(String.class);
-                accepts(EmporiaAPIService.PASSWORD, "password").withRequiredArg()
-                        .ofType(String.class);
-
-                accepts(INFLUX_URL, "InfluxDB server URL").withRequiredArg().ofType(String.class)
-                        .defaultsTo(DEFAULT_INFLUX_URL);
-                accepts(INFLUX_PORT, "InfluxDB server port").withRequiredArg()
-                        .ofType(Integer.class).defaultsTo(DEFAULT_INFLUX_PORT);
-                accepts(INFLUX_USER, "InfluxDB server username").withRequiredArg()
-                        .ofType(String.class);
-                accepts(INFLUX_PASS, "InfluxDB server password").withRequiredArg()
-                        .ofType(String.class);
-                accepts(INFLUX_DB, "InfluxDB database").withRequiredArg().ofType(String.class)
-                        .defaultsTo(DEFAULT_INFLUX_DB);
-                accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
-
-                accepts(RAW, "output raw JSON readings to STDOUT");
-
-                accepts(OFFSET,
-                        "time offset if no prior data is available (number plus time unit; one "
-                                + "of 's', 'm', or 'h')").withRequiredArg()
-                        .withValuesConvertedBy(new OffsetConverter()).defaultsTo(DEFAULT_OFFSET);
-
-                accepts(LoggingConfigurator.LOGFILE, "log to this file").withOptionalArg()
-                        .defaultsTo(DEFAULT_LOG_FILE);
-
-                acceptsAll(asList("d", LoggingConfigurator.DEBUG), "enable debug messages.");
-                acceptsAll(asList("q", LoggingConfigurator.QUIET),
-                        "do not print any messages to the console except for errors.");
-            }
-        };
-
+        OptionParser parser = getOptionParser();
         OptionSet options = parser.parse(argv);
         if (options.has(HELP_ARG)) {
             printHelp(parser);
@@ -198,6 +150,61 @@ public class EmporiaDownloader {
         downloader.run();
     }
 
+    static OptionParser getOptionParser() {
+        return new OptionParser() {
+            {
+                accepts(HELP_ARG, "display help text");
+
+                accepts(CONFIGURATION_FILE,
+                        "configuration file; CLI " + "parameters override configured parameters!")
+                        .withRequiredArg().ofType(String.class)
+                        .defaultsTo(DEFAULT_CONFIGURATION_FILE);
+
+                accepts(SLEEP, "number of minutes to sleep between cycles").withRequiredArg()
+                        .ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
+
+                accepts(EmporiaAPIService.REGION, "AWS region").withRequiredArg()
+                        .ofType(String.class);
+                accepts(EmporiaAPIService.CLIENTAPP_ID, "AWS client ID").withRequiredArg()
+                        .ofType(String.class);
+                accepts(EmporiaAPIService.POOL_ID, "AWS user pool ID").withRequiredArg()
+                        .ofType(String.class);
+
+                accepts(EmporiaAPIService.USERNAME, "username").withRequiredArg()
+                        .ofType(String.class);
+                accepts(EmporiaAPIService.PASSWORD, "password").withRequiredArg()
+                        .ofType(String.class);
+
+                accepts(INFLUX_URL, "InfluxDB server URL").withRequiredArg().ofType(String.class)
+                        .defaultsTo(DEFAULT_INFLUX_URL);
+                accepts(INFLUX_PORT, "InfluxDB server port").withRequiredArg()
+                        .ofType(Integer.class).defaultsTo(DEFAULT_INFLUX_PORT);
+                accepts(INFLUX_USER, "InfluxDB server username").withRequiredArg()
+                        .ofType(String.class);
+                accepts(INFLUX_PASS, "InfluxDB server password").withRequiredArg()
+                        .ofType(String.class);
+                accepts(INFLUX_DB, "InfluxDB database").withRequiredArg().ofType(String.class)
+                        .defaultsTo(DEFAULT_INFLUX_DB);
+                accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
+
+                accepts(LoggingConfigurator.RAW, "output raw JSON readings to this file or "
+                        + "STDOUT if none is given").withOptionalArg().defaultsTo(DEFAULT_RAW_LOG_FILE);
+
+                accepts(OFFSET,
+                        "time offset if no prior data is available (number plus time unit; one "
+                                + "of 's', 'm', or 'h')").withRequiredArg()
+                        .withValuesConvertedBy(new OffsetConverter()).defaultsTo(DEFAULT_OFFSET);
+
+                accepts(LoggingConfigurator.LOGFILE, "log to this file").withRequiredArg()
+                        .defaultsTo(DEFAULT_LOG_FILE);
+
+                acceptsAll(asList("d", LoggingConfigurator.DEBUG), "enable debug messages.");
+                acceptsAll(asList("q", LoggingConfigurator.QUIET),
+                        "do not print any messages to the console except for errors.");
+            }
+        };
+    }
+
     private static void printHelp(OptionParser parser) {
         try {
             parser.printHelpOn(System.out);
@@ -206,7 +213,7 @@ public class EmporiaDownloader {
         }
     }
 
-    protected static Configuration getConfiguration(OptionSet optionSet)
+    static Configuration getConfiguration(OptionSet optionSet)
             throws ConfigurationException {
         Configuration config =
                 new PropertiesConfiguration(optionSet.valueOf(CONFIGURATION_FILE).toString());
@@ -215,25 +222,39 @@ public class EmporiaDownloader {
             for (OptionSpec<?> optionSpec : optionSet.specs()) {
                 String property = optionSpec.options().get(optionSpec.options().size() - 1);
                 if (optionSet.valuesOf(optionSpec).size() == 0) {
-                    config.addProperty(property, true);
+                    config.setProperty(property, true);
                     continue;
                 }
 
                 for (Object value : optionSet.valuesOf(optionSpec)) {
-                    config.addProperty(property, value);
+                    config.setProperty(property, value);
                 }
             }
         } catch (Exception e) {
             throw new ConfigurationException("Cannot parse options!", e);
         }
 
-        for (String option : REQUIRED_PARAMETERS) {
+        // backwards compatibility, otherwise we could add to required args
+        if (config.containsKey(LoggingConfigurator.RAW)
+                && (config.getString(LoggingConfigurator.RAW).equals("")
+                        || config.getString(LoggingConfigurator.RAW).equals("true"))) {
+            config.setProperty(LoggingConfigurator.RAW, DEFAULT_RAW_LOG_FILE);
+        } else if (config.containsKey(LoggingConfigurator.RAW)
+                && config.getString(LoggingConfigurator.RAW).equals("false")) {
+            config.clearProperty(LoggingConfigurator.RAW);
+        }
+
+        List<String> optionsToCheck = new ArrayList<>();
+        optionsToCheck.addAll(REQUIRED_PARAMETERS);
+        optionsToCheck.addAll(HAS_DEFAULT_VALUES);
+
+        for (String option : optionsToCheck) {
             if (!config.containsKey(option) || config.getProperty(option) == null) {
                 Object value = optionSet.valueOf(option);
                 if (value == null) {
                     throw new ConfigurationException("Missing parameter " + option);
                 }
-                config.addProperty(option, value);
+                config.setProperty(option, value);
             }
         }
 
@@ -352,8 +373,6 @@ public class EmporiaDownloader {
             Instant now = Instant.now();
             Instant end = now.minus(1, ChronoUnit.MILLIS);
 
-            ObjectMapper mapper = new ObjectMapper();
-
             while (end.isBefore(now)) {
                 log.debug("channel: " + channel + " " + start + " - " + end);
                 Readings readings = service.getReadings(channel, start, end);
@@ -369,14 +388,6 @@ public class EmporiaDownloader {
 
                 if (influxDBLoader != null) {
                     influxDBLoader.save(readings);
-                }
-
-                if (configuration.getBoolean(RAW, false)) {
-                    try {
-                        System.out.println(mapper.writeValueAsString(readings));
-                    } catch (JsonProcessingException e) {
-                        log.error("Cannot convert readings to JSON", e);
-                    }
                 }
 
                 if (readings.getEnd() == null || readings.getStart().equals(readings.getEnd())) {

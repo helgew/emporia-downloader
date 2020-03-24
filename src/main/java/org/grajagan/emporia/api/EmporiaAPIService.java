@@ -73,6 +73,7 @@ public class EmporiaAPIService {
 
         OkHttpClient client = simpleClient.newBuilder()
                 .addInterceptor(new EmporiaAPIInterceptor(authenticationManager))
+                .addInterceptor(new LogJsonInterceptor())
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
