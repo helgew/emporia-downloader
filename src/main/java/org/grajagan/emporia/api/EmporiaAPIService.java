@@ -37,6 +37,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.concurrent.TimeUnit;
 
 @Log4j2
@@ -120,8 +122,13 @@ public class EmporiaAPIService {
     }
 
     public Readings getReadings(Channel channel, Instant start, Instant end) {
-        Call<Readings> readingsCall = emporiaAPI.getReadings(start, end, Readings.DEFAULT_TYPE, channel.getDeviceGid(),
-                Readings.DEFAULT_SCALE, Readings.DEFAULT_UNIT, channel.getChannelNum());
+        Call<Readings> readingsCall = emporiaAPI.getReadings(start.truncatedTo(ChronoUnit.SECONDS),
+                end.truncatedTo(ChronoUnit.SECONDS),
+                Readings.DEFAULT_TYPE,
+                channel.getDeviceGid(),
+                Readings.DEFAULT_SCALE,
+                Readings.DEFAULT_UNIT,
+                channel.getChannelNum());
         Readings readings = null;
         try {
             readings = readingsCall.execute().body();

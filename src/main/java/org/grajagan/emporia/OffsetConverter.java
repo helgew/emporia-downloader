@@ -27,12 +27,14 @@ import joptsimple.ValueConverter;
 import lombok.extern.log4j.Log4j2;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 
 @Log4j2
-public class OffsetConverter implements ValueConverter<TemporalAmount> {
+public class OffsetConverter implements ValueConverter<Temporal> {
     @Override
-    public TemporalAmount convert(String value) {
+    public Instant convert(String value) {
         TemporalAmount amount = null;
         try {
             String unit = value.substring(value.length() - 1).toLowerCase();
@@ -54,12 +56,12 @@ public class OffsetConverter implements ValueConverter<TemporalAmount> {
             throw new ValueConversionException(msg, e);
         }
 
-        return amount;
+        return Instant.now().minus(amount);
     }
 
     @Override
-    public Class<? extends TemporalAmount> valueType() {
-        return TemporalAmount.class;
+    public Class<? extends Instant> valueType() {
+        return Instant.class;
     }
 
     @Override

@@ -45,6 +45,7 @@ import java.nio.file.Paths;
 import java.security.Security;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,7 +89,7 @@ public class EmporiaDownloader {
 
     static final Integer DEFAULT_SLEEP = 5;
 
-    private static final TemporalAmount DEFAULT_OFFSET = new CommandLineTemporalUnit();
+    private static final Temporal DEFAULT_OFFSET = new DefaultCommandLineOffset();
 
     static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
     static final List<String> HAS_DEFAULT_VALUES = new ArrayList<>();
@@ -366,7 +367,7 @@ public class EmporiaDownloader {
             if (lastDataPoint.containsKey(channel)) {
                 start = lastDataPoint.get(channel);
             } else {
-                start = Instant.now().minus((TemporalAmount) configuration.getProperty(OFFSET));
+                start = (Instant) configuration.getProperty(OFFSET);
                 lastDataPoint.put(channel, start);
             }
 
