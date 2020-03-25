@@ -25,17 +25,15 @@ package org.grajagan.emporia;
 import lombok.experimental.Delegate;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.Temporal;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 
-public class DefaultCommandLineOffset implements Temporal {
-    private static final int DEFAULT_OFFSET_HOURS = 3;
-
+public class DefaultCommandLineOffset implements TemporalAmount {
     @Delegate
-    Instant delegate = Instant.now().minus(Duration.ofHours(DEFAULT_OFFSET_HOURS));
+    TemporalAmount delegate = Duration.ofHours(3);
 
     @Override
     public String toString() {
-        return DEFAULT_OFFSET_HOURS + "h";
+        return delegate.get(ChronoUnit.SECONDS)/3600 + "h";
     }
 }

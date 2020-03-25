@@ -43,6 +43,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.security.Security;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
@@ -69,7 +70,7 @@ public class EmporiaDownloader {
     private static final String INFLUX_DB = "influx-db";
     private static final String DISABLE_INFLUX = "disable-influx";
 
-    private static final String OFFSET = "offset";
+    static final String OFFSET = "offset";
 
     private static final String SLEEP = "sleep";
 
@@ -84,12 +85,9 @@ public class EmporiaDownloader {
     static final String DEFAULT_LOG_FILE =
             Paths.get("application.log").toAbsolutePath().toString();
 
-    static final String DEFAULT_RAW_LOG_FILE =
-            Paths.get("data.json").toAbsolutePath().toString();
-
     static final Integer DEFAULT_SLEEP = 5;
 
-    private static final Temporal DEFAULT_OFFSET = new DefaultCommandLineOffset();
+    private static final TemporalAmount DEFAULT_OFFSET = new DefaultCommandLineOffset();
 
     static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
     static final List<String> HAS_DEFAULT_VALUES = new ArrayList<>();
@@ -189,7 +187,7 @@ public class EmporiaDownloader {
                 accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
 
                 accepts(LoggingConfigurator.RAW, "output raw JSON readings to this file or "
-                        + "STDOUT if none is given").withOptionalArg().defaultsTo(DEFAULT_RAW_LOG_FILE);
+                        + "STDOUT if none is given").withOptionalArg();
 
                 accepts(OFFSET,
                         "time offset if no prior data is available (number plus time unit; one "
@@ -237,9 +235,10 @@ public class EmporiaDownloader {
 
         // backwards compatibility, otherwise we could add to required args
         if (config.containsKey(LoggingConfigurator.RAW)
-                && (config.getString(LoggingConfigurator.RAW).equals("")
-                        || config.getString(LoggingConfigurator.RAW).equals("true"))) {
-            config.setProperty(LoggingConfigurator.RAW, DEFAULT_RAW_LOG_FILE);
+                && (config.getProperty(LoggingConfigurator.RAW) == null
+                        || config.getProperty(LoggingConfigurator.RAW).toString().equals("")
+                        || config.getProperty(LoggingConfigurator.RAW).toString().equals("true"))) {
+            config.setProperty(LoggingConfigurator.RAW, "");
         } else if (config.containsKey(LoggingConfigurator.RAW)
                 && config.getString(LoggingConfigurator.RAW).equals("false")) {
             config.clearProperty(LoggingConfigurator.RAW);
@@ -258,6 +257,9 @@ public class EmporiaDownloader {
                 config.setProperty(option, value);
             }
         }
+
+        Instant offset = Instant.now().minus((TemporalAmount) config.getProperty(OFFSET));
+        config.setProperty(OFFSET, offset);
 
         return config;
     }
