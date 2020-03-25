@@ -37,6 +37,7 @@ import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Device;
 import org.grajagan.emporia.model.Readings;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -214,8 +215,14 @@ public class EmporiaDownloader {
 
     static Configuration getConfiguration(OptionSet optionSet)
             throws ConfigurationException {
-        Configuration config =
-                new PropertiesConfiguration(optionSet.valueOf(CONFIGURATION_FILE).toString());
+
+        String confFileName = optionSet.valueOf(CONFIGURATION_FILE).toString();
+        File confFile = new File(confFileName);
+
+        PropertiesConfiguration config = new PropertiesConfiguration();
+        if (confFile.exists() && confFile.canRead()) {
+            config.load(confFile);
+        }
 
         try {
             for (OptionSpec<?> optionSpec : optionSet.specs()) {
