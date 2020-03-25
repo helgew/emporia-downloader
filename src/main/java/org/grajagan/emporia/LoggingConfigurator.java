@@ -40,7 +40,11 @@ public class LoggingConfigurator {
     private LoggingConfigurator() {}
 
     public static void configure(org.apache.commons.configuration.Configuration configuration) {
-        MainMapLookup.setMainArguments(configuration.getString(LOGFILE), configuration.getString(RAW));
+        if (configuration.getProperty(RAW) instanceof String) {
+            MainMapLookup.setMainArguments(configuration.getString(LOGFILE), configuration.getString(RAW));
+        } else {
+            MainMapLookup.setMainArguments(configuration.getString(LOGFILE));
+        }
 
         if (configuration.getBoolean(DEBUG, false)) {
             Configurator.setLevel("org.grajagan", Level.DEBUG);

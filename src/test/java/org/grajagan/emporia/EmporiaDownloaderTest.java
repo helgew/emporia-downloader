@@ -71,16 +71,20 @@ public class EmporiaDownloaderTest {
         configuration = getConfiguration(parser, optionList);
 
         assertTrue(configuration.containsKey(key), "Configuration should contain the key " + key);
-        assertTrue(configuration.getProperty(key) instanceof String,
-                "Property should be a string");
-        assertTrue(configuration.getString(key).isEmpty(), "Property should be empty");
+        assertTrue(configuration.getProperty(key) instanceof Boolean,
+                "Property should be a boolean");
 
         optionList.add("true");
-        assertTrue(configuration.getString(key).isEmpty(), "Property should be empty");
+        configuration = getConfiguration(parser, optionList);
+
+        assertTrue(configuration.getProperty(key) instanceof Boolean,
+                "Property should be a boolean");
 
         popNshift(FOOBAR);
 
         configuration = getConfiguration(parser, optionList);
+        assertTrue(configuration.getProperty(key) instanceof String,
+                "Property should be a String");
         assertEquals(FOOBAR, configuration.getString(key));
     }
 

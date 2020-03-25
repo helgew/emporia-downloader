@@ -235,13 +235,13 @@ public class EmporiaDownloader {
 
         // backwards compatibility, otherwise we could add to required args
         if (config.containsKey(LoggingConfigurator.RAW)
-                && (config.getProperty(LoggingConfigurator.RAW) == null
-                        || config.getProperty(LoggingConfigurator.RAW).toString().equals("")
-                        || config.getProperty(LoggingConfigurator.RAW).toString().equals("true"))) {
-            config.setProperty(LoggingConfigurator.RAW, "");
-        } else if (config.containsKey(LoggingConfigurator.RAW)
-                && config.getString(LoggingConfigurator.RAW).equals("false")) {
+                && config.getProperty(LoggingConfigurator.RAW) instanceof Boolean
+                && !config.getBoolean(LoggingConfigurator.RAW)) {
             config.clearProperty(LoggingConfigurator.RAW);
+        } else if (config.containsKey(LoggingConfigurator.RAW)
+                && config.getProperty(LoggingConfigurator.RAW) instanceof String
+                && config.getString(LoggingConfigurator.RAW).equals("true")) {
+            config.setProperty(LoggingConfigurator.RAW, true);
         }
 
         List<String> optionsToCheck = new ArrayList<>();
