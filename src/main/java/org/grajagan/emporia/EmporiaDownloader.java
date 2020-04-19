@@ -365,8 +365,12 @@ public class EmporiaDownloader {
         }
         for (Channel channel : device.getChannels()) {
             Readings readings = influxDBLoader.load(channel);
-            log.debug("last reading for " + channel + ": " + readings);
-            lastDataPoint.put(channel, readings.getEnd());
+            if (readings.getEnd() != null) {
+                log.debug("last reading for " + channel + ": " + readings);
+                lastDataPoint.put(channel, readings.getEnd());
+            } else {
+                log.warn("no readings loaded for " + channel);
+            }
         }
     }
 

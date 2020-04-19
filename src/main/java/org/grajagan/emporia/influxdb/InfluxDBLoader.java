@@ -87,7 +87,7 @@ public class InfluxDBLoader {
         Readings readings = new Readings();
         readings.setChannel(channel);
         for (QueryResult.Result result : queryResult.getResults()) {
-            if (result == null) {
+            if (result == null || result.getSeries() == null) {
                 continue;
             }
 
