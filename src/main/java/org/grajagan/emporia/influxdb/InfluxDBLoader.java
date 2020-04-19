@@ -87,6 +87,10 @@ public class InfluxDBLoader {
         Readings readings = new Readings();
         readings.setChannel(channel);
         for (QueryResult.Result result : queryResult.getResults()) {
+            if (result == null) {
+                continue;
+            }
+
             for (QueryResult.Series series : result.getSeries()) {
                 if (series.getColumns().size() == 2 && series.getColumns().get(0).equals("time")
                         && series.getValues().size() == 1) {
