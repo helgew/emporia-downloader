@@ -118,6 +118,7 @@ public class EmporiaDownloader {
         }
 
         if (!options.has(DISABLE_INFLUX)) {
+            REQUIRED_PARAMETERS.add(INFLUX_URL);
             REQUIRED_PARAMETERS.add(INFLUX_DB);
             REQUIRED_PARAMETERS.add(INFLUX_PORT);
         }
