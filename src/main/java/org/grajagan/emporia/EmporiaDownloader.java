@@ -47,14 +47,8 @@ import java.security.Security;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -225,6 +219,10 @@ public class EmporiaDownloader {
             config.load(confFile);
         }
 
+        if (config.containsKey(OFFSET)) {
+            config.setProperty(OFFSET, new OffsetConverter().convert((String) config.getProperty(OFFSET)));
+        }
+
         try {
             for (OptionSpec<?> optionSpec : optionSet.specs()) {
                 String property = optionSpec.options().get(optionSpec.options().size() - 1);
@@ -387,12 +385,15 @@ public class EmporiaDownloader {
 
             Instant now = Instant.now();
             Instant end = now.minus(1, ChronoUnit.MILLIS);
+            if (end.isAfter(start.plus(Duration.of(1, ChronoUnit.HOURS)))) {
+                end = start.plus(Duration.of(1, ChronoUnit.HOURS));
+            }
 
             while (end.isBefore(now)) {
                 log.debug("channel: " + channel + " " + start + " - " + end);
                 Readings readings = service.getReadings(channel, start, end);
 
-                if (readings == null || readings.getUsage().size() == 0
+                if (readings == null || readings.getUsageList().size() == 0
                         || readings.getStart().equals(readings.getEnd())) {
                     log.warn("Received empty/null readings. Skipping channel for now!");
                     log.warn("Readings: " + readings);

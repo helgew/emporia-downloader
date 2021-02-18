@@ -47,15 +47,16 @@ import java.util.regex.Pattern;
 public class Readings {
     public static final String DEFAULT_TYPE = "INSTANT";
     public static final String DEFAULT_SCALE = "1S";
-    public static final String DEFAULT_UNIT = "WATTS";
+    public static final String DEFAULT_UNIT = "KilowattHours";
 
     private Instant start;
     private Instant end;
+    private Instant firstUsageInstant;
     private String type = DEFAULT_TYPE;
     private String scale = DEFAULT_SCALE;
     private String unit = DEFAULT_UNIT;
     private Channel channel;
-    private List<Float> usage = new ArrayList<>();
+    private List<Float> usageList = new ArrayList<>();
 
     @JsonIgnore
     static Pattern pattern = Pattern.compile("(\\d+)(\\w+)");
@@ -87,19 +88,38 @@ public class Readings {
     @JsonIgnore
     public SortedMap<Instant, Float> getDataPoints() {
         SortedMap<Instant, Float> dataPoints = new TreeMap<>();
-        if (start == null || end == null || scale == null || usage == null) {
+        if (start == null || end == null || scale == null || usageList == null) {
             log.warn("Missing values: " + toString());
             return dataPoints;
         }
 
         Duration interval = getInterval();
+        Float kwhToWattFactor = 3.6f / interval.getSeconds();
 
         Instant instant = start;
-        for (Float data : usage) {
-            dataPoints.put(instant, data);
+        for (Float data : usageList) {
+            dataPoints.put(instant, data * kwhToWattFactor);
             instant = instant.plus(interval);
         }
 
         return dataPoints;
+    }
+
+    public void setFirstUsageInstant(Instant firstUsageInstant) {
+        this.firstUsageInstant = firstUsageInstant;
+        setStart(firstUsageInstant);
+        calculateEnd();
+    }
+
+    public void setUsageList(List<Float> usageList) {
+        this.usageList = usageList;
+        calculateEnd();
+    }
+
+    private void calculateEnd() {
+        if (firstUsageInstant != null) {
+            Duration interval = getInterval();
+            setEnd(start.plus(interval.getSeconds() * usageList.size(), ChronoUnit.SECONDS));
+        }
     }
 }

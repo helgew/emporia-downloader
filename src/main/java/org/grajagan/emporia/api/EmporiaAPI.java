@@ -38,12 +38,12 @@ public interface EmporiaAPI {
     @GET("/customers/{customerId}/devices?detailed=true&hierarchy=true")
     Call<Customer> getCustomer(@Path("customerId") Integer customerId);
 
-    @GET("/usage/time")
+    @GET("/AppAPI?apiMethod=getChartUsage")
     Call<Readings> getReadings(@Query("start") Instant start,
             @Query("end") Instant end,
             @Query("type") String type,
             @Query("deviceGid") Integer deviceGid,
             @Query("scale") String scale,
-            @Query("unit") String unit,
-            @Query("channels") String channels);
+            @Query("energyUnit") String unit,
+            @Query("channel") String channel);
 }

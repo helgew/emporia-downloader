@@ -22,7 +22,9 @@ package org.grajagan.emporia.api;
  * #L%
  */
 
+import jdk.nashorn.internal.runtime.logging.Logger;
 import lombok.Data;
+import lombok.extern.log4j.Log4j2;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import org.grajagan.aws.CognitoAuthenticationManager;
@@ -30,6 +32,7 @@ import org.grajagan.aws.CognitoAuthenticationManager;
 import java.io.IOException;
 
 @Data
+@Log4j2
 public class EmporiaAPIInterceptor implements Interceptor {
     private final CognitoAuthenticationManager authenticationManager;
 
@@ -42,6 +45,7 @@ public class EmporiaAPIInterceptor implements Interceptor {
                 .header("authtoken", authenticationManager.getIdentityToken())
                 .method(original.method(), original.body()).build();
 
+        log.trace(request.toString());
         return chain.proceed(request);
     }
 }

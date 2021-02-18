@@ -38,9 +38,7 @@ import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 
 import java.net.URL;
-import java.text.NumberFormat;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
@@ -99,7 +97,7 @@ public class InfluxDBLoader {
                     float value = ((Double) series.getValues().get(0).get(1)).floatValue();
                     readings.setStart(time);
                     readings.setEnd(time);
-                    readings.getUsage().add(value);
+                    readings.getUsageList().add(value);
                 }
             }
         }
