@@ -94,14 +94,14 @@ public class Readings {
         }
 
         Duration interval = getInterval();
-        Float kwhToWattFactor = 3.6f / interval.getSeconds();
+        Float kwhToWattFactor = 3600000f / interval.getSeconds();
 
         Instant instant = start;
         for (Float data : usageList) {
             if (data != null) {
                 dataPoints.put(instant, data * kwhToWattFactor);
             }
-            
+
             instant = instant.plus(interval);
         }
 
