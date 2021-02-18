@@ -98,7 +98,10 @@ public class Readings {
 
         Instant instant = start;
         for (Float data : usageList) {
-            dataPoints.put(instant, data * kwhToWattFactor);
+            if (data != null) {
+                dataPoints.put(instant, data * kwhToWattFactor);
+            }
+            
             instant = instant.plus(interval);
         }
 
