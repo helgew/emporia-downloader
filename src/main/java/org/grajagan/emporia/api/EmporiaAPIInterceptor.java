@@ -22,7 +22,6 @@ package org.grajagan.emporia.api;
  * #L%
  */
 
-import jdk.nashorn.internal.runtime.logging.Logger;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.Interceptor;
