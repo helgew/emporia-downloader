@@ -46,9 +46,6 @@ public class EmporiaAPIService {
 
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
-    public static final String CLIENTAPP_ID = "clientapp-id";
-    public static final String POOL_ID = "pool-id";
-    public static final String REGION = "region";
     public static final String MAINTENANCE_URL = "http://s3.amazonaws.com/"
             + "com.emporiaenergy.manual.ota/maintenance/maintenance.json";
 
@@ -59,10 +56,7 @@ public class EmporiaAPIService {
     public EmporiaAPIService(Configuration configuration) {
         CognitoAuthenticationManager authenticationManager =
                 CognitoAuthenticationManager.builder().username(configuration.getString(USERNAME))
-                        .password(configuration.getString(PASSWORD))
-                        .poolId(configuration.getString(POOL_ID))
-                        .region(configuration.getString(REGION))
-                        .clientId(configuration.getString(CLIENTAPP_ID)).build();
+                        .password(configuration.getString(PASSWORD)).build();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .callTimeout(2, TimeUnit.MINUTES)

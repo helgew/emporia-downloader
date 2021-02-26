@@ -26,7 +26,6 @@ The executable jar can be run with the following options::
 
     Option                      Description                                        
     ------                      -----------                                        
-    --clientapp-id <String>     AWS client ID                                      
     --config <String>           configuration file
                                   (CLI parameters override configured parameters!)
                                   (default: <project dir>/config.properties)                    
@@ -44,18 +43,15 @@ The executable jar can be run with the following options::
                                   plus time unit; one of 's', 'm', or 'h')
                                   (default: 3h)
     --password <String>         password
-    --pool-id <String>          AWS user pool ID                                   
     -q, --quiet                 do not print any messages to the console except for
                                   errors.                                          
     --raw [String]              output raw JSON readings to this file or STDOUT if
                                   none is given
-    --region <String>           AWS region
-    --sleep <Integer>           number of minutes to sleep between cycles [5]      
+    --sleep <Integer>           number of minutes to sleep between cycles [5]
                                   (default: 5)                                     
     --username <String>         username        
 
-The following parameters are required: ``username``, ``password``, ``clientapp-id``, ``pool-id``, and ``region``. All parameters can be configured in the configuration file (see ``config.properties.sample``).
+The following ``username`` and ``password`` parameters are required. All parameters can be
+configured in the configuration file (see ``config.properties.sample``).
 
 Example: ``java -jar dist/emporia-downloader.1.0-SNAPSHOT.jar --config config.properties``
-
-**Note:** The connection parameters (``clientapp-id``, ``pool-id``, and ``region``) are not published in this repository. Please `contact me <mailto:helgew@grajagan.org>`_ for details.

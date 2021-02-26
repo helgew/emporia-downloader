@@ -94,8 +94,7 @@ public class EmporiaDownloader {
 
     static {
         REQUIRED_PARAMETERS.addAll(Arrays
-                .asList(EmporiaAPIService.REGION, EmporiaAPIService.CLIENTAPP_ID,
-                        EmporiaAPIService.POOL_ID, EmporiaAPIService.USERNAME,
+                .asList(EmporiaAPIService.USERNAME,
                         EmporiaAPIService.PASSWORD));
 
         HAS_DEFAULT_VALUES.addAll(Arrays.asList(SLEEP, OFFSET));
@@ -162,13 +161,6 @@ public class EmporiaDownloader {
 
                 accepts(SLEEP, "number of minutes to sleep between cycles").withRequiredArg()
                         .ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
-
-                accepts(EmporiaAPIService.REGION, "AWS region").withRequiredArg()
-                        .ofType(String.class);
-                accepts(EmporiaAPIService.CLIENTAPP_ID, "AWS client ID").withRequiredArg()
-                        .ofType(String.class);
-                accepts(EmporiaAPIService.POOL_ID, "AWS user pool ID").withRequiredArg()
-                        .ofType(String.class);
 
                 accepts(EmporiaAPIService.USERNAME, "username").withRequiredArg()
                         .ofType(String.class);

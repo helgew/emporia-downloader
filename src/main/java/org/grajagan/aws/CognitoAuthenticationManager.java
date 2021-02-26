@@ -55,9 +55,10 @@ public class CognitoAuthenticationManager {
     private final String username;
     @ToString.Exclude
     private final String password;
-    private final String region;
-    private final String poolId;
-    private final String clientId;
+
+    private static final String REGION = "us-east-2";
+    private static final String POOL_ID = "us-east-2_ghlOXVLi1";
+    private static final String CLIENT_ID = "4qte47jbstod8apnfic0bunmrq";
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
@@ -111,7 +112,7 @@ public class CognitoAuthenticationManager {
         }
 
         if (provider == null) {
-            provider = new AwsCognitoRSAKeyProvider(region, poolId);
+            provider = new AwsCognitoRSAKeyProvider(REGION, POOL_ID);
         }
 
         Algorithm algorithm = Algorithm.RSA256(provider);
@@ -146,7 +147,7 @@ public class CognitoAuthenticationManager {
 
     protected void login() throws Exception {
         log.info("logging in");
-        AuthenticationHelper authenticationHelper = new AuthenticationHelper(poolId, clientId);
+        AuthenticationHelper authenticationHelper = new AuthenticationHelper(POOL_ID, CLIENT_ID);
         RespondToAuthChallengeResult result =
                 authenticationHelper.performSRPAuthentication(username, password);
         authenticationResult = new AuthenticationResult(result.getAuthenticationResult());
@@ -157,7 +158,7 @@ public class CognitoAuthenticationManager {
         log.info("refreshing " + authenticationResult.toString());
         InitiateAuthRequest initiateAuthRequest = new InitiateAuthRequest();
         initiateAuthRequest.setAuthFlow(AuthFlowType.REFRESH_TOKEN_AUTH);
-        initiateAuthRequest.setClientId(clientId);
+        initiateAuthRequest.setClientId(CLIENT_ID);
         initiateAuthRequest
                 .addAuthParametersEntry("REFRESH_TOKEN", authenticationResult.getRefreshToken());
 
@@ -165,7 +166,7 @@ public class CognitoAuthenticationManager {
         AWSCognitoIdentityProvider cognitoIdentityProvider =
                 AWSCognitoIdentityProviderClientBuilder.standard()
                         .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
-                        .withRegion(Regions.fromName(region)).build();
+                        .withRegion(Regions.fromName(REGION)).build();
         InitiateAuthResult initiateAuthResult =
                 cognitoIdentityProvider.initiateAuth(initiateAuthRequest);
 
