@@ -28,7 +28,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 
-public class DefaultCommandLineHistory implements TemporalAmount {
+public class DefaultHistory implements TemporalAmount {
     @Delegate
     TemporalAmount delegate = Duration.ofHours(3);
 

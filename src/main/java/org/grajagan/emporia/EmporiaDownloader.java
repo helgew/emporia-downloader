@@ -90,7 +90,7 @@ public class EmporiaDownloader {
 
     static final Integer DEFAULT_SLEEP = 5;
 
-    private static final TemporalAmount DEFAULT_HISTORY = new DefaultCommandLineHistory();
+    private static final TemporalAmount DEFAULT_HISTORY = new DefaultHistory();
 
     static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
     static final List<String> HAS_DEFAULT_VALUES = new ArrayList<>();
