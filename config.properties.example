@@ -1,6 +1,44 @@
-# the following three parameters MUST be defined!
-pool-id=
-clientapp-id=
-region=
+# Username and password must be configured here or provided on the command line
+# username=
+# password=
 
-# add any other parameters here
+# Enable debug messages by setting this to 'true'
+debug=false
+
+# The path to the log file to be used
+logfile=application.log
+
+# If set to false, log messages will be printed on STDOUT
+quiet=false
+
+# If set to true, raw JSON data from the server will be printed to STDOUT
+raw=false
+
+# The scale determines the dataset intervals. It must be one of 's', 'm', 'h', 'd', 'w, 'M', or
+# 'y' corresponding to one second, minute, hour, day, week, month, or year respectively.
+# Note that data for an interval of one second will be output as Watts to InfluxDB if so
+# configured. All other data is in kWh.
+scale=s
+
+# The number of minutes to wait before downloading the next dataset. This parameter will be
+# adjusted such that it is always greater than the scale. If a value of 0 is given, the
+# downloader exits after one dataset has been downloaded.
+sleep=5
+
+# InfluxDB parameters
+
+# If set to true, not data will be written to InfluxDB
+disable-influx=true
+
+# The name of the InfluxDB database
+influx-db=electricity
+
+# The URL of the InfluxDB server
+influx-url=http://localhost
+
+# The port of the InfluxDB server
+influx-port=8086
+
+# Username and password for the InfluxDB server
+# influx-user=
+# influx-password=
