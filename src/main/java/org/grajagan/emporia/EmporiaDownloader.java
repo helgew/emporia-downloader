@@ -70,6 +70,9 @@ public class EmporiaDownloader {
     private static final String INFLUX_DB = "influx-db";
     private static final String DISABLE_INFLUX = "disable-influx";
 
+    static final String HISTORY = "history";
+
+    // keeping this for backwards compatibility
     static final String OFFSET = "offset";
 
     private static final String SLEEP = "sleep";
@@ -87,7 +90,7 @@ public class EmporiaDownloader {
 
     static final Integer DEFAULT_SLEEP = 5;
 
-    private static final TemporalAmount DEFAULT_OFFSET = new DefaultCommandLineOffset();
+    private static final TemporalAmount DEFAULT_HISTORY = new DefaultCommandLineHistory();
 
     static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
     static final List<String> HAS_DEFAULT_VALUES = new ArrayList<>();
@@ -97,7 +100,7 @@ public class EmporiaDownloader {
                 .asList(EmporiaAPIService.USERNAME,
                         EmporiaAPIService.PASSWORD));
 
-        HAS_DEFAULT_VALUES.addAll(Arrays.asList(SLEEP, OFFSET));
+        HAS_DEFAULT_VALUES.addAll(Arrays.asList(SLEEP, HISTORY));
     }
 
     private Configuration configuration;
@@ -182,10 +185,11 @@ public class EmporiaDownloader {
                 accepts(LoggingConfigurator.RAW, "output raw JSON readings to this file or "
                         + "STDOUT if none is given").withOptionalArg();
 
-                accepts(OFFSET,
-                        "time offset if no prior data is available (number plus time unit; one "
-                                + "of 's', 'm', or 'h')").withRequiredArg()
-                        .withValuesConvertedBy(new OffsetConverter()).defaultsTo(DEFAULT_OFFSET);
+                acceptsAll(asList(HISTORY, OFFSET),
+                        "history to download if no prior data is available (number plus time "
+                                + "unit; one of 's', 'm', or 'h').\nFor example, '--history 3h' "
+                                + "downloads the last three hours of data.").withRequiredArg()
+                        .withValuesConvertedBy(new HistoryConverter()).defaultsTo(DEFAULT_HISTORY);
 
                 accepts(LoggingConfigurator.LOGFILE, "log to this file").withRequiredArg()
                         .defaultsTo(DEFAULT_LOG_FILE);
@@ -216,8 +220,9 @@ public class EmporiaDownloader {
             config.load(confFile);
         }
 
-        if (config.containsKey(OFFSET)) {
-            config.setProperty(OFFSET, new OffsetConverter().convert((String) config.getProperty(OFFSET)));
+        if (config.containsKey(HISTORY)) {
+            config.setProperty(
+                    HISTORY, new HistoryConverter().convert((String) config.getProperty(HISTORY)));
         }
 
         try {
@@ -261,8 +266,8 @@ public class EmporiaDownloader {
             }
         }
 
-        Instant offset = Instant.now().minus((TemporalAmount) config.getProperty(OFFSET));
-        config.setProperty(OFFSET, offset);
+        Instant history = Instant.now().minus((TemporalAmount) config.getProperty(HISTORY));
+        config.setProperty(HISTORY, history);
 
         return config;
     }
@@ -376,7 +381,7 @@ public class EmporiaDownloader {
             if (lastDataPoint.containsKey(channel)) {
                 start = lastDataPoint.get(channel);
             } else {
-                start = (Instant) configuration.getProperty(OFFSET);
+                start = (Instant) configuration.getProperty(HISTORY);
                 lastDataPoint.put(channel, start);
             }
 

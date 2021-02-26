@@ -94,8 +94,8 @@ public class EmporiaDownloaderTest {
     }
 
     @Test
-    public void testOffsetConfiguration() throws ConfigurationException {
-        String key = EmporiaDownloader.OFFSET;
+    public void testHistoryConfiguration() throws ConfigurationException {
+        String key = EmporiaDownloader.HISTORY;
         Configuration configuration = getConfiguration(parser, optionList);
         assertTrue(configuration.containsKey(key), "The key " + key + " is missing!");
         assertTrue(configuration.getProperty(key) instanceof Instant,
@@ -108,10 +108,10 @@ public class EmporiaDownloaderTest {
 
         optionList.add("1h");
         configuration = getConfiguration(parser, optionList);
-        Instant offset = (Instant) configuration.getProperty(key);
+        Instant history = (Instant) configuration.getProperty(key);
         Instant now = Instant.now();
         assertTrue(
-                now.minus(offset.toEpochMilli(), ChronoUnit.MILLIS).truncatedTo(ChronoUnit.MINUTES)
+                now.minus(history.toEpochMilli(), ChronoUnit.MILLIS).truncatedTo(ChronoUnit.MINUTES)
                         .equals(Instant.EPOCH.plus(Duration.ofHours(1))));
     }
 

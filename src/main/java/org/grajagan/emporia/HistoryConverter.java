@@ -30,7 +30,7 @@ import java.time.Duration;
 import java.time.temporal.TemporalAmount;
 
 @Log4j2
-public class OffsetConverter implements ValueConverter<TemporalAmount> {
+public class HistoryConverter implements ValueConverter<TemporalAmount> {
     @Override
     public TemporalAmount convert(String value) {
         TemporalAmount amount = null;
@@ -49,7 +49,7 @@ public class OffsetConverter implements ValueConverter<TemporalAmount> {
                     break;
             }
         } catch (Exception e) {
-            String msg = "Cannot convert offset \"" + value + "\" to temporal amount!";
+            String msg = "Cannot convert history \"" + value + "\" to temporal amount!";
             log.error(msg, e);
             throw new ValueConversionException(msg, e);
         }
