@@ -2,12 +2,14 @@
 Emporiá Vue Data Downloader
 ===========================
 
-This project provides a simple client application for the `Emporiá Energy Smart Home Monitor <https://emporiaenergy.com>`_ cloud data storage.
+This project provides a simple client application for the `Emporiá Energy Smart Home Monitor
+<https://emporiaenergy.com>`_ cloud data storage.
 
 Requirements
 ============
 
-The project assumes deployment to a Unix platform but will work on any other platform that supports java with only minor modifications (i.e. path to the logging directory). 
+The project assumes deployment to a Unix platform but will work on any other platform that
+supports java with only minor modifications (i.e. path to the logging directory).
 
 All external API dependencies are managed via maven, which is needed for compilation. 
 
@@ -17,7 +19,8 @@ Usage
 Compilation
 -----------
 
-Generate the executable jar (it will be saved to the ``dist/`` directory in the project directory) using the command '``mvn package``'.
+Generate the executable jar (it will be saved to the ``dist/`` directory in the project
+directory) using the command '``mvn package``'.
 
 Running
 -----------
@@ -51,7 +54,10 @@ The executable jar can be run with the following options::
                                   (default: 5)                                     
     --username <String>         username        
 
-The following ``username`` and ``password`` parameters are required. All parameters can be
+The ``username`` and ``password`` parameters are required. All parameters can be
 configured in the configuration file (see ``config.properties.sample``).
+
+If you are planning to use `InfluxDB <https://www.influxdata.com>`_, make sure to create the
+database beforehand.
 
 Example: ``java -jar dist/emporia-downloader.1.0-SNAPSHOT.jar --config config.properties``
