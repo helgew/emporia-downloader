@@ -22,7 +22,6 @@ package org.grajagan.emporia;
  * #L%
  */
 
-import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.apache.commons.configuration.Configuration;
@@ -30,15 +29,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EmporiaDownloaderTest {
@@ -50,25 +43,23 @@ public class EmporiaDownloaderTest {
 
     @BeforeEach
     public void setUp() {
-
         parser = EmporiaDownloader.getOptionParser();
         optionList = new ArrayList<>();
         for (String option : EmporiaDownloader.REQUIRED_PARAMETERS) {
             optionList.add("--" + option);
             optionList.add(FOOBAR);
         }
+
+        optionList.add("--config");
+        optionList.add(FOOBAR);
     }
 
     @Test
     public void testRawOutputConfiguration() throws ConfigurationException {
         String key = LoggingConfigurator.RAW;
 
-        Configuration configuration = getConfiguration(parser, optionList);
-
-        assertFalse(configuration.containsKey(key), "We should not output raw data");
-
         optionList.add("--" + key);
-        configuration = getConfiguration(parser, optionList);
+        Configuration configuration = getConfiguration(parser, optionList);
 
         assertTrue(configuration.containsKey(key), "Configuration should contain the key " + key);
         assertTrue(configuration.getProperty(key) instanceof Boolean,
@@ -79,40 +70,6 @@ public class EmporiaDownloaderTest {
 
         assertTrue(configuration.getProperty(key) instanceof Boolean,
                 "Property should be a boolean");
-
-        popNshift(FOOBAR);
-
-        configuration = getConfiguration(parser, optionList);
-        assertTrue(configuration.getProperty(key) instanceof String,
-                "Property should be a String");
-        assertEquals(FOOBAR, configuration.getString(key));
-    }
-
-    private void popNshift(String argument) {
-        optionList.remove(optionList.size() - 1);
-        optionList.add(argument);
-    }
-
-    @Test
-    public void testHistoryConfiguration() throws ConfigurationException {
-        String key = EmporiaDownloader.HISTORY;
-        Configuration configuration = getConfiguration(parser, optionList);
-        assertTrue(configuration.containsKey(key), "The key " + key + " is missing!");
-        assertTrue(configuration.getProperty(key) instanceof Instant,
-                "The property should be an Instant");
-
-        optionList.add("--" + key);
-
-        assertThrows(OptionException.class, () -> getConfiguration(parser, optionList),
-                "The property " + key + " requires an argument");
-
-        optionList.add("1h");
-        configuration = getConfiguration(parser, optionList);
-        Instant history = (Instant) configuration.getProperty(key);
-        Instant now = Instant.now();
-        assertTrue(
-                now.minus(history.toEpochMilli(), ChronoUnit.MILLIS).truncatedTo(ChronoUnit.MINUTES)
-                        .equals(Instant.EPOCH.plus(Duration.ofHours(1))));
     }
 
     private Configuration getConfiguration(OptionParser parser, List<String> optionList)

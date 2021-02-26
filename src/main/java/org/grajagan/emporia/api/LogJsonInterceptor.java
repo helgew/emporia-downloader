@@ -35,14 +35,14 @@ public class LogJsonInterceptor implements Interceptor {
     @Override
     public Response intercept(Interceptor.Chain chain) throws IOException {
         Request request = chain.request();
-        String channel = request.url().queryParameter("channels");
+        String channel = request.url().queryParameter("channel");
 
         Response response = chain.proceed(request);
 
         if (log.isTraceEnabled() && response.body() != null && channel != null) {
             String rawJson = response.body().string();
-            rawJson = rawJson.replaceFirst("\\{", "{\"channels\":\"" + channel + "\",");
-            log.trace(rawJson);
+            rawJson = rawJson.replaceFirst("\\{", "{\"channel\":\"" + channel + "\",");
+            System.out.println(rawJson);
 
             // Re-create the response before returning it because body can be read only once
             response = response.newBuilder()
