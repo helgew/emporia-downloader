@@ -4,7 +4,7 @@ package org.grajagan.emporia;
  * #%L
  * Emporia Energy API Client
  * %%
- * Copyright (C) 2002 - 2020 Helge Weissig
+ * Copyright (C) 2002 - 2021 Helge Weissig
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,18 +22,28 @@ package org.grajagan.emporia;
  * #L%
  */
 
-import lombok.experimental.Delegate;
+import joptsimple.ValueConversionException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 
-public class DefaultHistory implements TemporalAmount {
-    @Delegate
-    TemporalAmount delegate = Duration.ofHours(3);
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    @Override
-    public String toString() {
-        return delegate.get(ChronoUnit.SECONDS)/3600 + "h";
+class TemporalAmountConverterTest {
+
+    @Test
+    void testConvert() {
+        TemporalAmountConverter converter = new TemporalAmountConverter();
+        TemporalAmount amount = converter.convert("h");
+        assertEquals(amount, Duration.ofHours(1));
+        amount = converter.convert("3m");
+        assertEquals(amount, Duration.ofMinutes(3));
+        amount = converter.convert("15s");
+        assertEquals(amount, Duration.ofSeconds(15));
+
+        Assertions.assertThrows(ValueConversionException.class,
+                () -> { converter.convert("1x"); });
     }
 }

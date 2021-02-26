@@ -10,12 +10,12 @@ package org.grajagan.emporia;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -30,12 +30,16 @@ import java.time.Duration;
 import java.time.temporal.TemporalAmount;
 
 @Log4j2
-public class HistoryConverter implements ValueConverter<TemporalAmount> {
+public class TemporalAmountConverter implements ValueConverter<TemporalAmount> {
     @Override
     public TemporalAmount convert(String value) {
         TemporalAmount amount = null;
         try {
-            String unit = value.substring(value.length() - 1).toLowerCase();
+            if (value.length() == 1) {
+                value = "1" + value;
+            }
+
+            String unit = value.substring(value.length() - 1);
             Long l = Long.parseLong(value.substring(0, value.length() - 1));
             switch (unit) {
                 case "s":
@@ -47,6 +51,21 @@ public class HistoryConverter implements ValueConverter<TemporalAmount> {
                 case "h":
                     amount = Duration.ofHours(l);
                     break;
+                case "d":
+                    amount = Duration.ofDays(l);
+                    break;
+                case "w":
+                    amount = Duration.ofDays(l * 7);
+                    break;
+                case "M":
+                    amount = Duration.ofDays(l * 30);
+                    break;
+                case "y":
+                    amount = Duration.ofDays(l * 365);
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            value + " is not a supported temporal " + "amount!");
             }
         } catch (Exception e) {
             String msg = "Cannot convert history \"" + value + "\" to temporal amount!";
@@ -64,6 +83,6 @@ public class HistoryConverter implements ValueConverter<TemporalAmount> {
 
     @Override
     public String valuePattern() {
-        return null;
+        return "A number plus time unit (one of 's', 'm', 'h', 'd', 'w', 'M', or 'y')";
     }
 }

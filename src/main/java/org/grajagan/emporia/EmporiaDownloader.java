@@ -22,6 +22,7 @@ package org.grajagan.emporia;
  * #L%
  */
 
+import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -36,6 +37,7 @@ import org.grajagan.emporia.model.Channel;
 import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Device;
 import org.grajagan.emporia.model.Readings;
+import org.grajagan.emporia.model.Scale;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,17 +92,14 @@ public class EmporiaDownloader {
 
     static final Integer DEFAULT_SLEEP = 5;
 
-    private static final TemporalAmount DEFAULT_HISTORY = new DefaultHistory();
-
     static final List<String> REQUIRED_PARAMETERS = new ArrayList<>();
     static final List<String> HAS_DEFAULT_VALUES = new ArrayList<>();
 
     static {
-        REQUIRED_PARAMETERS.addAll(Arrays
-                .asList(EmporiaAPIService.USERNAME,
-                        EmporiaAPIService.PASSWORD));
+        REQUIRED_PARAMETERS
+                .addAll(Arrays.asList(EmporiaAPIService.USERNAME, EmporiaAPIService.PASSWORD));
 
-        HAS_DEFAULT_VALUES.addAll(Arrays.asList(SLEEP, HISTORY));
+        HAS_DEFAULT_VALUES.addAll(Arrays.asList(SLEEP, HISTORY, EmporiaAPIService.SCALE));
     }
 
     private Configuration configuration;
@@ -162,7 +161,11 @@ public class EmporiaDownloader {
                         .withRequiredArg().ofType(String.class)
                         .defaultsTo(DEFAULT_CONFIGURATION_FILE);
 
-                accepts(SLEEP, "number of minutes to sleep between cycles").withRequiredArg()
+                accepts(SLEEP,
+                        "number of minutes to sleep between cycles.\nThis parameter will be "
+                                + "adjusted such that it is always greater than the scale.\nIf "
+                                + "a value of 0 is given, the downloader exits "
+                                + "after one dataset has been downloaded.").withRequiredArg()
                         .ofType(Integer.class).defaultsTo(DEFAULT_SLEEP);
 
                 accepts(EmporiaAPIService.USERNAME, "username").withRequiredArg()
@@ -182,14 +185,20 @@ public class EmporiaDownloader {
                         .defaultsTo(DEFAULT_INFLUX_DB);
                 accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
 
-                accepts(LoggingConfigurator.RAW, "output raw JSON readings to this file or "
-                        + "STDOUT if none is given").withOptionalArg();
+                accepts(LoggingConfigurator.RAW, "output raw JSON readings to STDOUT");
+
+                accepts(EmporiaAPIService.SCALE, "scale of the data\nFor example, '--scale d' will "
+                        + "download a datapoint per day.").withRequiredArg()
+                        .withValuesConvertedBy(new ScaleConverter())
+                        .defaultsTo(new Scale("s"));
 
                 acceptsAll(asList(HISTORY, OFFSET),
-                        "history to download if no prior data is available (number plus time "
-                                + "unit; one of 's', 'm', or 'h').\nFor example, '--history 3h' "
-                                + "downloads the last three hours of data.").withRequiredArg()
-                        .withValuesConvertedBy(new HistoryConverter()).defaultsTo(DEFAULT_HISTORY);
+                        "history to download if no prior data is available.\nFor "
+                                + "example, '--history 3w' downloads the last 3 weeks of data"
+                                + ".\nNote that the availability of data is subject to Emporia's"
+                                + " data retention policies.").withRequiredArg()
+                        .withValuesConvertedBy(new TemporalAmountConverter())
+                        .defaultsTo(new DefaultTemporalAmount("3h"));
 
                 accepts(LoggingConfigurator.LOGFILE, "log to this file").withRequiredArg()
                         .defaultsTo(DEFAULT_LOG_FILE);
@@ -203,14 +212,14 @@ public class EmporiaDownloader {
 
     private static void printHelp(OptionParser parser) {
         try {
+            parser.formatHelpWith(new BuiltinHelpFormatter(120, 10));
             parser.printHelpOn(System.out);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
     }
 
-    static Configuration getConfiguration(OptionSet optionSet)
-            throws ConfigurationException {
+    static Configuration getConfiguration(OptionSet optionSet) throws ConfigurationException {
 
         String confFileName = optionSet.valueOf(CONFIGURATION_FILE).toString();
         File confFile = new File(confFileName);
@@ -221,8 +230,13 @@ public class EmporiaDownloader {
         }
 
         if (config.containsKey(HISTORY)) {
-            config.setProperty(
-                    HISTORY, new HistoryConverter().convert((String) config.getProperty(HISTORY)));
+            config.setProperty(HISTORY,
+                    new TemporalAmountConverter().convert(config.getString(HISTORY)));
+        }
+
+        if (config.containsKey(EmporiaAPIService.SCALE)) {
+            config.setProperty(EmporiaAPIService.SCALE,
+                    new ScaleConverter().convert(config.getString(EmporiaAPIService.SCALE)));
         }
 
         try {
@@ -242,13 +256,13 @@ public class EmporiaDownloader {
         }
 
         // backwards compatibility, otherwise we could add to required args
-        if (config.containsKey(LoggingConfigurator.RAW)
-                && config.getProperty(LoggingConfigurator.RAW) instanceof Boolean
-                && !config.getBoolean(LoggingConfigurator.RAW)) {
+        if (config.containsKey(LoggingConfigurator.RAW) && config
+                .getProperty(LoggingConfigurator.RAW) instanceof Boolean && !config
+                .getBoolean(LoggingConfigurator.RAW)) {
             config.clearProperty(LoggingConfigurator.RAW);
-        } else if (config.containsKey(LoggingConfigurator.RAW)
-                && config.getProperty(LoggingConfigurator.RAW) instanceof String
-                && config.getString(LoggingConfigurator.RAW).equals("true")) {
+        } else if (config.containsKey(LoggingConfigurator.RAW) && config
+                .getProperty(LoggingConfigurator.RAW) instanceof String && config
+                .getString(LoggingConfigurator.RAW).equals("true")) {
             config.setProperty(LoggingConfigurator.RAW, true);
         }
 
@@ -264,6 +278,12 @@ public class EmporiaDownloader {
                 }
                 config.setProperty(option, value);
             }
+        }
+
+        if (config.getInt(SLEEP) > 0) {
+            Scale scale = (Scale) config.getProperty(EmporiaAPIService.SCALE);
+            int mins = Math.max(config.getInt(SLEEP), (int) scale.toInterval().toMinutes());
+            config.setProperty(SLEEP, mins);
         }
 
         Instant history = Instant.now().minus((TemporalAmount) config.getProperty(HISTORY));
@@ -347,9 +367,15 @@ public class EmporiaDownloader {
         if (influxDBLoader != null) {
             influxDBLoader.writeToDB();
         }
+
+        System.exit(0);
     }
 
     private boolean cannotSleep() {
+        if (configuration.getInt(SLEEP) == 0) {
+            return true;
+        }
+
         try {
             Thread.sleep(1000 * 60 * configuration.getInt(SLEEP));
         } catch (InterruptedException e) {
@@ -377,6 +403,7 @@ public class EmporiaDownloader {
 
     protected void processDevice(Device device, InfluxDBLoader influxDBLoader) {
         Instant start;
+        Scale scale = (Scale) configuration.getProperty(EmporiaAPIService.SCALE);
         for (Channel channel : device.getChannels()) {
             if (lastDataPoint.containsKey(channel)) {
                 start = lastDataPoint.get(channel);
@@ -386,17 +413,18 @@ public class EmporiaDownloader {
             }
 
             Instant now = Instant.now();
-            Instant end = now.minus(1, ChronoUnit.MILLIS);
-            if (end.isAfter(start.plus(Duration.of(1, ChronoUnit.HOURS)))) {
-                end = start.plus(Duration.of(1, ChronoUnit.HOURS));
-            }
+            long secs = scale.getAmount().get(ChronoUnit.SECONDS);
+            long epSecs = now.minus(start.toEpochMilli(), ChronoUnit.MILLIS).getEpochSecond();
+            long buckets = Math.min(epSecs/secs, 2000);
 
-            while (end.isBefore(now)) {
+            Instant end = start.plus(buckets, scale.getChronoUnit());
+
+            do {
                 log.debug("channel: " + channel + " " + start + " - " + end);
                 Readings readings = service.getReadings(channel, start, end);
 
-                if (readings == null || readings.getUsageList().size() == 0
-                        || readings.getStart().equals(readings.getEnd())) {
+                if (readings == null || readings.getUsageList().size() == 0 || readings.getStart()
+                        .equals(readings.getEnd())) {
                     log.warn("Received empty/null readings. Skipping channel for now!");
                     log.warn("Readings: " + readings);
                     break;
@@ -416,7 +444,7 @@ public class EmporiaDownloader {
                 lastDataPoint.put(channel, start);
                 end = start.plus(start.toEpochMilli() - readings.getStart().toEpochMilli(),
                         ChronoUnit.MILLIS);
-            }
+            } while (end.isBefore(now));
         }
     }
 }

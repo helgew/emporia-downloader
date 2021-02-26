@@ -32,6 +32,7 @@ import org.grajagan.emporia.JacksonObjectMapper;
 import org.grajagan.emporia.model.Channel;
 import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Readings;
+import org.grajagan.emporia.model.Scale;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -46,12 +47,14 @@ public class EmporiaAPIService {
 
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
+    public static final String SCALE    = "scale";
     public static final String MAINTENANCE_URL = "http://s3.amazonaws.com/"
             + "com.emporiaenergy.manual.ota/maintenance/maintenance.json";
 
     private final EmporiaAPI emporiaAPI;
     private final String username;
     private final OkHttpClient simpleClient;
+    private final Scale scale;
 
     public EmporiaAPIService(Configuration configuration) {
         CognitoAuthenticationManager authenticationManager =
@@ -79,6 +82,8 @@ public class EmporiaAPIService {
 
         emporiaAPI = retrofit.create(EmporiaAPI.class);
         username = configuration.getString(USERNAME);
+        scale = (Scale) configuration.getProperty(SCALE);
+        Readings.setScale(scale);
     }
 
     public boolean isDownForMaintenance() {
@@ -119,7 +124,7 @@ public class EmporiaAPIService {
                 end.truncatedTo(ChronoUnit.SECONDS),
                 Readings.DEFAULT_TYPE,
                 channel.getDeviceGid(),
-                Readings.DEFAULT_SCALE,
+                scale.toString(),
                 Readings.DEFAULT_UNIT,
                 channel.getChannelNum());
         Readings readings = null;

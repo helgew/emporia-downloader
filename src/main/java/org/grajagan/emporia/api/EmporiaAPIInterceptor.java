@@ -44,7 +44,7 @@ public class EmporiaAPIInterceptor implements Interceptor {
                 .header("authtoken", authenticationManager.getIdentityToken())
                 .method(original.method(), original.body()).build();
 
-        log.trace(request.toString());
+        log.debug(request.toString());
         return chain.proceed(request);
     }
 }
