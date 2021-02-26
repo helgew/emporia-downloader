@@ -71,13 +71,18 @@ The ``username`` and ``password`` parameters are required. All parameters can be
 configured in the configuration file (see ``config.properties.sample``). Command line options take
 precedent over parameters configured in the configuration file.
 
-If you are planning to use InfluxDB, make sure to create the database beforehand.
+Electricity Usage Units
+=============
+
+All data displayed and saved to InfluxDB will be in Kilowatt-hours with the exception of
+per-second data saved to InfluxDB, which will be in Watts for historical reasons.
 
 Example Use Cases
 =============
 
 The following use cases assume that additional parameters (e.g. ``username``, ``password``, and
-InfluxDB-related settings) are configured in ``config.properties``.
+InfluxDB-related settings) are configured in ``config.properties``. If you are planning to use
+InfluxDB, make sure to create the database beforehand.
 
 Continuously download per-second datapoints starting 3 hours ago, saving data to InfluxDB
 -----------
@@ -93,7 +98,8 @@ Continuously download hourly datapoints starting yesterday, saving data to Influ
 ``java -jar dist/emporia-downloader.1.0-SNAPSHOT.jar --scale h --history 1d``
 
 In this case, the downloader will download and save the historical data and then go into a
-continuous loop where it will sleep for an hour and then download new data.
+continuous loop where it will sleep for an hour and then download new data. All data saved to
+InfluxDB will be in Kilowatt-hours.
 
 Print the last hour of per-second data to STDOUT only and quit
 -----------
