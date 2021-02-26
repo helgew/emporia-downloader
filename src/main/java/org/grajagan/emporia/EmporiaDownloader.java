@@ -212,7 +212,7 @@ public class EmporiaDownloader {
 
     private static void printHelp(OptionParser parser) {
         try {
-            parser.formatHelpWith(new BuiltinHelpFormatter(120, 10));
+            parser.formatHelpWith(new BuiltinHelpFormatter(100, 2));
             parser.printHelpOn(System.out);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
