@@ -81,8 +81,6 @@ public class Scale {
     @Override
     public String toString() {
         switch (unit) {
-            case "s":
-                return "1SEC";
             case "m":
                 return "1MIN";
             case "M":
