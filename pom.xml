@@ -32,6 +32,10 @@
         <url>https://github.com/helgew/emporia-downloader.git</url>
         <tag>HEAD</tag>
     </scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/helgew/emporia-downloader/issues</url>
+    </issueManagement>
 
     <inceptionYear>2002</inceptionYear>
 
@@ -177,6 +181,11 @@
                     <artifactId>license-maven-plugin</artifactId>
                     <version>2.0.0</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.github.danielflower.mavenplugins</groupId>
+                    <artifactId>gitlog-maven-plugin</artifactId>
+                    <version>1.13.17</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -240,6 +249,31 @@
                                 <exclude>**/AuthenticationHelper.java</exclude>
                             </excludes>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.danielflower.mavenplugins</groupId>
+                <artifactId>gitlog-maven-plugin</artifactId>
+                <configuration>
+                    <reportTitle>Changelog for Emporia Downloader version ${project.version}</reportTitle>
+                    <verbose>true</verbose>
+                    <outputDirectory>dist</outputDirectory>
+                    <generatePlainTextChangeLog>true</generatePlainTextChangeLog>
+                    <plainTextChangeLogFilename>ChangeLog.txt</plainTextChangeLogFilename>
+                    <fullGitMessage>true</fullGitMessage>
+                    <dateFormat>yyyy-MM-dd HH:mm:ss Z</dateFormat>
+                    <bugzillaPattern>(?:Bug|UPDATE|FIX|ADD|NEW|#) ?#?(\d+)</bugzillaPattern>
+                    <excludeCommitsPattern>.*\b(without|Upgraded)\b.*</excludeCommitsPattern>
+                    <showCommiter>false</showCommiter>
+                    <generateJSONChangeLog>false</generateJSONChangeLog>
+                    <generateSimpleHTMLChangeLog>false</generateSimpleHTMLChangeLog>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
