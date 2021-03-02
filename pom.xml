@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.grajagan.emporia</groupId>
     <artifactId>emporia-downloader</artifactId>
-    <version>1.1</version>
+    <version>1.0-SNAPSHOT</version>
     <name>Emporia Energy API Client</name>
 
     <licenses>
@@ -28,7 +30,6 @@
         <developerConnection>scm:git:git@github.com:helgew/emporia-downloader.git</developerConnection>
         <connection>scm:git:https://github.com/helgew/emporia-downloader.git</connection>
         <url>https://github.com/helgew/emporia-downloader.git</url>
-        <tag>emporia-downloader-1.1</tag>
     </scm>
     <issueManagement>
         <system>GitHub</system>
@@ -228,8 +229,10 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>${main-class}</mainClass>
                                     <manifestEntries>
                                         <Multi-Release>true</Multi-Release>
