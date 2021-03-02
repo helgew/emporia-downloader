@@ -111,3 +111,14 @@ each device going back by an hour. The data shown will be in Kilowatt-hours but 
 InfluxDB will be in Watts. There will be two lines per device and channel combination as the
 downloader splits the download into chunks with no more than 2000 datapoints.
 
+License
+=============
+
+This project is licensed under the GPL version 3 License - see the `LICENSE.txt <LICENSE.txt>`_
+file for details.
+
+Privacy Policy
+=============
+
+Our privacy policy is detailed in `privacy-policy.txt <privacy-policy.txt>`_
+
