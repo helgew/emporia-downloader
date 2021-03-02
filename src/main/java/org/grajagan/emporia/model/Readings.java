@@ -55,7 +55,6 @@ public class Readings {
     private Instant start;
     private Instant end;
     private Instant firstUsageInstant;
-    @JsonIgnore
     private Channel channel;
     private List<Float> usageList = new ArrayList<>();
 
