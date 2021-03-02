@@ -292,7 +292,7 @@
                     <generateJSONChangeLog>false</generateJSONChangeLog>
                     <generateSimpleHTMLChangeLog>true</generateSimpleHTMLChangeLog>
                     <simpleHTMLChangeLogFilename>ChangeLog.html</simpleHTMLChangeLogFilename>
-                    <includeCommitsAfterCommit>a2c338798fc8d3e4f5f35d0cc7a222c5a4f392b2</includeCommitsAfterCommit>
+                    <includeCommitsAfterCommit>491bc45802c68068057fae363e40c4fd053f3ff1</includeCommitsAfterCommit>
                 </configuration>
                 <executions>
                     <execution>
