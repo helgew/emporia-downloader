@@ -4,7 +4,7 @@
 
     <groupId>org.grajagan.emporia</groupId>
     <artifactId>emporia-downloader</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <name>Emporia Energy API Client</name>
 
     <licenses>
@@ -28,7 +28,7 @@
         <developerConnection>scm:git:git@github.com:helgew/emporia-downloader.git</developerConnection>
         <connection>scm:git:https://github.com/helgew/emporia-downloader.git</connection>
         <url>https://github.com/helgew/emporia-downloader.git</url>
-        <tag>HEAD</tag>
+        <tag>emporia-downloader-1.1</tag>
     </scm>
     <issueManagement>
         <system>GitHub</system>
@@ -285,7 +285,7 @@
                     <bugzillaPattern>(?:Bug|UPDATE|FIX|ADD|NEW|#) ?#?(\d+)</bugzillaPattern>
                     <excludeCommitsPattern>.*\b(scm|maven-release-plugin|without|Upgraded)\b.*</excludeCommitsPattern>
                     <showCommiter>false</showCommiter>
-                    <generatePlainTextChangeLog>true</generatePlainTextChangeLog>
+                    <generatePlainTextChangeLog>false</generatePlainTextChangeLog>
                     <generateJSONChangeLog>false</generateJSONChangeLog>
                     <generateSimpleHTMLChangeLog>true</generateSimpleHTMLChangeLog>
                     <simpleHTMLChangeLogFilename>ChangeLog.html</simpleHTMLChangeLogFilename>
@@ -293,6 +293,7 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
