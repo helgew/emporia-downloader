@@ -265,10 +265,11 @@
                     <fullGitMessage>true</fullGitMessage>
                     <dateFormat>yyyy-MM-dd HH:mm:ss Z</dateFormat>
                     <bugzillaPattern>(?:Bug|UPDATE|FIX|ADD|NEW|#) ?#?(\d+)</bugzillaPattern>
-                    <excludeCommitsPattern>.*\b(without|Upgraded)\b.*</excludeCommitsPattern>
+                    <excludeCommitsPattern>.*\b(maven-release-plugin|without|Upgraded)\b.*</excludeCommitsPattern>
                     <showCommiter>false</showCommiter>
                     <generateJSONChangeLog>false</generateJSONChangeLog>
                     <generateSimpleHTMLChangeLog>false</generateSimpleHTMLChangeLog>
+                    <includeCommitsAfterCommit>806fd2576e441397625a973cc2618448bde4ad16</includeCommitsAfterCommit>
                 </configuration>
                 <executions>
                     <execution>
