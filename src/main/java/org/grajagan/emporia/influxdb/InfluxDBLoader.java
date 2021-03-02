@@ -39,6 +39,7 @@ import org.influxdb.dto.QueryResult;
 
 import java.net.URL;
 import java.time.Instant;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
@@ -67,10 +68,34 @@ public class InfluxDBLoader {
     private void connect() {
         influxDB = InfluxDBFactory.connect(influxDbUrl.toString(), influxDbUser, influxDbPassword);
 
+        if (!dbExists()) {
+            log.warn("InfluxDB database " + influxDbName + " does not exist. Creating!");
+            influxDB.query(new Query("CREATE DATABASE " + influxDbName));
+        }
+
         batchPoints = BatchPoints.database(influxDbName).retentionPolicy("autogen")
                 .consistency(InfluxDB.ConsistencyLevel.ALL).build();
 
         isConnected = true;
+    }
+
+    private boolean dbExists() {
+        // create DB if it does not exist
+        Query query = new Query("SHOW DATABASES");
+        QueryResult queryResult = influxDB.query(query);
+        for (QueryResult.Result result : queryResult.getResults()) {
+            log.debug(result.toString());
+            for (QueryResult.Series series : result.getSeries()) {
+                for (int i = 0; i < series.getValues().size(); i++) {
+                    List<Object> os = series.getValues().get(i);
+                    String db = (String) os.get(0);
+                    if (influxDbName.equals(db)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public Readings load(Channel channel) {

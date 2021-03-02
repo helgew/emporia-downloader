@@ -105,8 +105,7 @@ Example Use Cases
 =============
 
 The following use cases assume that additional parameters (e.g. ``username``, ``password``, and
-InfluxDB-related settings) are configured in ``config.properties``. If you are planning to use
-InfluxDB, make sure to create the database beforehand.
+InfluxDB-related settings) are configured in ``config.properties``.
 
 Continuously download per-second datapoints starting 3 hours ago, saving data to InfluxDB
 -----------
