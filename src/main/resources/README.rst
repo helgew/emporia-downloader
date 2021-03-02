@@ -108,7 +108,7 @@ InfluxDB, make sure to create the database beforehand.
 Continuously download per-second datapoints starting 3 hours ago, saving data to InfluxDB
 -----------
 
-``java -jar dist/emporia-downloader.1.1-SNAPSHOT.jar --config config.properties``
+``java -jar dist/${project.artifactId}.${project.version}.${project.packaging} --config config.properties``
 
 This assumes that InfluxDB specific parameters are configured in ``config.properties`` and that
 all other parameters are left as defaults.
@@ -116,7 +116,7 @@ all other parameters are left as defaults.
 Continuously download hourly datapoints starting yesterday, saving data to InfluxDB
 -----------
 
-``java -jar dist/emporia-downloader.1.1-SNAPSHOT.jar --scale h --history 1d``
+``java -jar dist/${project.artifactId}.${project.version}.${project.packaging} --scale h --history 1d``
 
 In this case, the downloader will download and save the historical data and then go into a
 continuous loop where it will sleep for an hour and then download new data. All data saved to
@@ -125,7 +125,7 @@ InfluxDB will be in Kilowatt-hours.
 Print the last hour of per-second data to STDOUT only and quit
 -----------
 
-``java -jar dist/emporia-downloader.1.1-SNAPSHOT.jar --history 1h --raw --sleep 0``
+``java -jar dist/${project.artifactId}.${project.version}.${project.packaging} --history 1h --raw --sleep 0``
 
 The downloader will download and print in JSON format the per-second usage for
 each device going back by an hour. The data shown will be in Kilowatt-hours but any data saved to

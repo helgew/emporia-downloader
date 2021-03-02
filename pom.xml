@@ -140,6 +140,22 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <excludes>
+                    <exclude>README.rst</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <targetPath>${project.basedir}</targetPath>
+                <includes>
+                    <include>README.rst</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -173,6 +189,10 @@
                 <plugin>
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>3.2.1</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.0.0-M1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -296,6 +316,13 @@
                     </fileSets>
                     <artifact>${project.basedir}/dist/${project.artifactId}.${project.version}.${project.packaging}</artifact>
                     <overwriteArtifact>true</overwriteArtifact>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <scmReleaseCommitComment>Release @{releaseLabel}</scmReleaseCommitComment>
                 </configuration>
             </plugin>
         </plugins>
