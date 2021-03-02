@@ -280,16 +280,16 @@
                     <reportTitle>Changelog for Emporia Downloader version ${project.version}</reportTitle>
                     <verbose>true</verbose>
                     <outputDirectory>dist</outputDirectory>
-                    <generatePlainTextChangeLog>true</generatePlainTextChangeLog>
-                    <plainTextChangeLogFilename>ChangeLog.txt</plainTextChangeLogFilename>
                     <fullGitMessage>true</fullGitMessage>
                     <dateFormat>yyyy-MM-dd HH:mm:ss Z</dateFormat>
                     <bugzillaPattern>(?:Bug|UPDATE|FIX|ADD|NEW|#) ?#?(\d+)</bugzillaPattern>
                     <excludeCommitsPattern>.*\b(scm|maven-release-plugin|without|Upgraded)\b.*</excludeCommitsPattern>
                     <showCommiter>false</showCommiter>
+                    <generatePlainTextChangeLog>true</generatePlainTextChangeLog>
                     <generateJSONChangeLog>false</generateJSONChangeLog>
-                    <generateSimpleHTMLChangeLog>false</generateSimpleHTMLChangeLog>
-                    <includeCommitsAfterCommit>806fd2576e441397625a973cc2618448bde4ad16</includeCommitsAfterCommit>
+                    <generateSimpleHTMLChangeLog>true</generateSimpleHTMLChangeLog>
+                    <simpleHTMLChangeLogFilename>ChangeLog.html</simpleHTMLChangeLogFilename>
+                    <includeCommitsAfterCommit>a2c338798fc8d3e4f5f35d0cc7a222c5a4f392b2</includeCommitsAfterCommit>
                 </configuration>
                 <executions>
                     <execution>
@@ -310,7 +310,7 @@
                         <fileSet>
                             <directory>dist</directory>
                             <includes>
-                                <include>*.txt</include>
+                                <include>*.html</include>
                             </includes>
                         </fileSet>
                     </fileSets>
@@ -322,7 +322,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
-                    <scmReleaseCommitComment>Release @{releaseLabel}</scmReleaseCommitComment>
+                    <scmReleaseCommitComment>Release Commit for @{releaseLabel}</scmReleaseCommitComment>
                 </configuration>
             </plugin>
         </plugins>
