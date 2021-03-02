@@ -27,8 +27,8 @@
         </developer>
     </developers>
     <scm>
-        <developerConnection>scm:git:git@github.com:helgew/emporia-downloader.git
-        </developerConnection>
+        <developerConnection>scm:git:git@github.com:helgew/emporia-downloader.git</developerConnection>
+        <connection>scm:git:https://github.com/helgew/emporia-downloader.git</connection>
         <url>https://github.com/helgew/emporia-downloader.git</url>
         <tag>HEAD</tag>
     </scm>
@@ -186,6 +186,11 @@
                     <artifactId>gitlog-maven-plugin</artifactId>
                     <version>1.13.17</version>
                 </plugin>
+                <plugin>
+                    <groupId>de.jutzig</groupId>
+                    <artifactId>github-release-plugin</artifactId>
+                    <version>1.4.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -276,6 +281,25 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>de.jutzig</groupId>
+                <artifactId>github-release-plugin</artifactId>
+                <configuration>
+                    <description>${project.name}; Release ${project.version}</description>
+                    <releaseName>${project.version}</releaseName>
+                    <tag>${project.version}</tag>
+                    <fileSets>
+                        <fileSet>
+                            <directory>dist</directory>
+                            <includes>
+                                <include>*.txt</include>
+                            </includes>
+                        </fileSet>
+                    </fileSets>
+                    <artifact>${project.basedir}/dist/${project.artifactId}.${project.version}.${project.packaging}</artifact>
+                    <overwriteArtifact>true</overwriteArtifact>
+                </configuration>
             </plugin>
         </plugins>
     </build>
