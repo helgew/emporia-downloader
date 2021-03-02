@@ -24,7 +24,6 @@
 <Configuration>
     <Properties>
         <Property name="LOG_PATTERN">%d{dd MMM yyyy HH:mm:ss} - %-5p (%F:%L): %m%n</Property>
-        <Property name="RAW_PATTERN">{ "ts" : %d{UNIX}, "data": %m{nolookups} }%n</Property>
     </Properties>
     <Appenders>
         <Console name="CONSOLE" target="SYSTEM_OUT" follow="true">
