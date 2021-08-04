@@ -68,6 +68,7 @@ public class EmporiaDownloader {
     private static final String INFLUX_ORG = "influx-org";
     private static final String INFLUX_BUCKET = "influx-bucket";
     private static final String INFLUX_TOKEN = "influx-token";
+    private static final String INFLUX_MEASUREMENT_NAME = "influx-measurement";
     private static final String DISABLE_INFLUX = "disable-influx";
 
     static final String HISTORY = "history";
@@ -175,20 +176,22 @@ public class EmporiaDownloader {
                         .defaultsTo(DEFAULT_INFLUX_URL);
                 accepts(INFLUX_PORT, "InfluxDB server port").withRequiredArg()
                         .ofType(Integer.class).defaultsTo(DEFAULT_INFLUX_PORT);
-                accepts(INFLUX_ORG, "InfluxDB server org").withRequiredArg()
-                        .ofType(String.class);
+                accepts(INFLUX_ORG, "InfluxDB server org").withRequiredArg().ofType(String.class);
                 accepts(INFLUX_BUCKET, "InfluxDB bucket").withRequiredArg().ofType(String.class)
                         .defaultsTo(DEFAULT_INFLUX_DB);
                 accepts(INFLUX_TOKEN, "InfluxDB server token").withRequiredArg()
                         .ofType(String.class);
+                accepts(INFLUX_MEASUREMENT_NAME,
+                        "InfluxDB measurement name\nIf left empty, measurements will be saved "
+                                + "by channel.").withRequiredArg().ofType(String.class);
                 accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
 
                 accepts(LoggingConfigurator.RAW, "output raw JSON readings to STDOUT");
 
-                accepts(EmporiaAPIService.SCALE, "scale of the data\nFor example, '--scale d' will "
-                        + "download a datapoint per day.").withRequiredArg()
-                        .withValuesConvertedBy(new ScaleConverter())
-                        .defaultsTo(new Scale("s"));
+                accepts(EmporiaAPIService.SCALE,
+                        "scale of the data\nFor example, '--scale d' will "
+                                + "download a datapoint per day.").withRequiredArg()
+                        .withValuesConvertedBy(new ScaleConverter()).defaultsTo(new Scale("s"));
 
                 acceptsAll(asList(HISTORY, OFFSET),
                         "history to download if no prior data is available.\nFor "
@@ -322,7 +325,8 @@ public class EmporiaDownloader {
                 influxDBLoader = new InfluxDBLoader(influxDbUri.toURL(),
                         configuration.getString(INFLUX_ORG),
                         configuration.getString(INFLUX_BUCKET),
-                        configuration.getString(INFLUX_TOKEN));
+                        configuration.getString(INFLUX_TOKEN),
+                        configuration.getString(INFLUX_MEASUREMENT_NAME));
             } catch (Exception e) {
                 log.error("Cannot instantiate InfluxDBLoader", e);
             }
@@ -406,7 +410,7 @@ public class EmporiaDownloader {
             Instant now = Instant.now();
             long secs = scale.getAmount().get(ChronoUnit.SECONDS);
             long epSecs = now.minus(start.toEpochMilli(), ChronoUnit.MILLIS).getEpochSecond();
-            long buckets = Math.min(epSecs/secs, 2000);
+            long buckets = Math.min(epSecs / secs, 2000);
 
             Instant end = start.plus(buckets, scale.getChronoUnit());
 

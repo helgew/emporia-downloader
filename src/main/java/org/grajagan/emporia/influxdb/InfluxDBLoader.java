@@ -56,6 +56,7 @@ public class InfluxDBLoader {
     private final String influxDbOrg;
     private final String influxDbBucket;
     private final String influxDbToken;
+    private final String measurementName;
 
     private InfluxDBClient influxDBclient;
 
@@ -67,7 +68,8 @@ public class InfluxDBLoader {
 
     private void connect() {
         influxDBclient = InfluxDBClientFactory
-                .create(influxDbUrl.toString(), influxDbToken.toCharArray(), influxDbOrg, influxDbBucket);
+                .create(influxDbUrl.toString(), influxDbToken.toCharArray(), influxDbOrg,
+                        influxDbBucket);
 
         if (!dbExists()) {
             log.warn("InfluxDB bucket " + influxDbBucket + " does not exist. Creating!");
@@ -107,11 +109,9 @@ public class InfluxDBLoader {
             connect();
         }
         String deviceName = getNameForChannel(channel);
-        String flux = "from(bucket: \"" + influxDbBucket + "\")\n" +
-                "  |> range(start: -10y)\n" +
-                "  |> filter(fn: (r) => r[\"_measurement\"] == \"" + deviceName + "\")\n" +
-                "  |> filter(fn: (r) => r[\"_field\"] == \"watts\")\n" +
-                "  |> last()";
+        String flux = "from(bucket: \"" + influxDbBucket + "\")\n" + "  |> range(start: -10y)\n"
+                + "  |> filter(fn: (r) => r[\"_measurement\"] == \"" + deviceName + "\")\n"
+                + "  |> filter(fn: (r) => r[\"_field\"] == \"watts\")\n" + "  |> last()";
         QueryApi queryApi = influxDBclient.getQueryApi();
 
         Readings readings = new Readings();
@@ -136,7 +136,8 @@ public class InfluxDBLoader {
         }
 
         SortedMap<Instant, Float> data = readings.getDataPoints();
-        String deviceName = getNameForChannel(readings.getChannel());
+        Channel channel = readings.getChannel();
+        String deviceName = getNameForChannel(channel);
 
         // apparently, the math is done on the server!
         float multiplier = 1f; // readings.getChannel().getChannelMultiplier();
@@ -147,14 +148,29 @@ public class InfluxDBLoader {
             if (data.get(i) == null) {
                 continue;
             }
-            Point point = Point.measurement(deviceName)
-                    .time(i.toEpochMilli(), WritePrecision.MS)
+
+            Point point;
+            if (measurementName == null) {
+                point = Point.measurement(deviceName);
+            } else {
+                point = Point.measurement(measurementName)
+                        .addTag("DeviceGID", channel.getDeviceGid().toString())
+                        .addTag("Device", channel.getChannelNum());
+            }
+
+            if (channel.getName() != null && !channel.getName().equals("")) {
+                point.addTag("Device Name", channel.getName());
+            }
+
+            point.time(i.toEpochMilli(), WritePrecision.MS)
                     .addField("watts", (int) (data.get(i) * multiplier * 100) / 100.0);
-            log.trace("Created point: " + point.toLineProtocol());
+
+            log.debug("Created point: " + point.toLineProtocol());
             points.add(point);
         }
 
         influxDBclient.getWriteApi().writePoints(points);
+        influxDBclient.getWriteApi().flush();
         writesCount += points.size();
     }
 
