@@ -30,8 +30,8 @@ sleep=5
 # If set to true, not data will be written to InfluxDB
 disable-influx=true
 
-# The name of the InfluxDB database
-influx-db=electricity
+# The name of the InfluxDB bucket
+influx-bucket=electricity/autogen
 
 # The URL of the InfluxDB server
 influx-url=http://localhost
@@ -39,6 +39,9 @@ influx-url=http://localhost
 # The port of the InfluxDB server
 influx-port=8086
 
-# Username and password for the InfluxDB server
-# influx-user=
-# influx-password=
+# The InfluxDB organization
+# influx-org=
+
+# The InfluxDB authentication token
+# influx-token=
+
