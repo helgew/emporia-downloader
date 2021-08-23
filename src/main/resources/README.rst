@@ -1,4 +1,3 @@
-.. -
 .. * #%L
 .. * Emporia Energy API Client
 .. * %%

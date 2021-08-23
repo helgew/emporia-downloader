@@ -4,7 +4,7 @@ package org.grajagan.aws;
  * #%L
  * Emporia Energy API Client
  * %%
- * Copyright (C) 2002 - 2020 Helge Weissig
+ * Copyright (C) 2002 - 2021 Helge Weissig
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
