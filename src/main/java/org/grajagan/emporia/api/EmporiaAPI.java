@@ -26,7 +26,6 @@ import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Readings;
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 import java.time.Instant;
@@ -35,8 +34,8 @@ public interface EmporiaAPI {
     @GET("/customers")
     Call<Customer> getCustomer(@Query("email") String email);
 
-    @GET("/customers/{customerId}/devices?detailed=true&hierarchy=true")
-    Call<Customer> getCustomer(@Path("customerId") Integer customerId);
+    @GET("/customers/devices?detailed=true&hierarchy=true")
+    Call<Customer> getCustomer(@Query("customerGid") Integer customerId);
 
     @GET("/AppAPI?apiMethod=getChartUsage")
     Call<Readings> getReadings(@Query("start") Instant start,
