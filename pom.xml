@@ -4,7 +4,7 @@
 
     <groupId>org.grajagan.emporia</groupId>
     <artifactId>emporia-downloader</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
     <name>Emporia Energy API Client</name>
 
     <licenses>
@@ -28,7 +28,7 @@
         <developerConnection>scm:git:git@github.com:helgew/emporia-downloader.git</developerConnection>
         <connection>scm:git:https://github.com/helgew/emporia-downloader.git</connection>
         <url>https://github.com/helgew/emporia-downloader.git</url>
-      <tag>HEAD</tag>
+      <tag>emporia-downloader-1.2</tag>
   </scm>
     <issueManagement>
         <system>GitHub</system>
