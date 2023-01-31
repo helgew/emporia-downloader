@@ -46,3 +46,5 @@ hs_err_pid*
 
 dist/
 .DS_Store
+
+.env
