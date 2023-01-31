@@ -39,7 +39,7 @@ All external API dependencies are managed via maven, which is needed for compila
 Usage
 =============
 
-You can compile the downloader application yourself or download the latest version (1.2)
+You can compile the downloader application yourself or download the latest version (1.3)
 from the `github repository <https://github.com/helgew/emporia-downloader/releases>`_.
 
 Compilation
@@ -114,7 +114,7 @@ InfluxDB-related settings) are configured in ``config.properties``.
 Continuously download per-second datapoints starting 3 hours ago, saving data to InfluxDB
 -----------
 
-``java -jar emporia-downloader.1.2.jar --config config.properties``
+``java -jar emporia-downloader.1.3.jar --config config.properties``
 
 This assumes that InfluxDB specific parameters are configured in ``config.properties`` and that
 all other parameters are left as defaults.
@@ -122,7 +122,7 @@ all other parameters are left as defaults.
 Continuously download hourly datapoints starting yesterday, saving data to InfluxDB
 -----------
 
-``java -jar emporia-downloader.1.2.jar --scale h --history 1d``
+``java -jar emporia-downloader.1.3.jar --scale h --history 1d``
 
 In this case, the downloader will download and save the historical data and then go into a
 continuous loop where it will sleep for an hour and then download new data. All data saved to
@@ -131,12 +131,27 @@ InfluxDB will be in Kilowatt-hours.
 Print the last hour of per-second data to STDOUT only and quit
 -----------
 
-``java -jar emporia-downloader.1.2.jar --history 1h --raw --sleep 0``
+``java -jar emporia-downloader.1.3.jar --history 1h --raw --sleep 0``
 
 The downloader will download and print in JSON format the per-second usage for
 each device going back by an hour. The data shown will be in Kilowatt-hours but any data saved to
 InfluxDB will be in Watts. There will be two lines per device and channel combination as the
 downloader splits the download into chunks with no more than 2000 datapoints.
+
+Docker
+=============
+
+To create a docker container, execute the following command:
+
+``docker build -t emporia-downloader .``
+
+(On Apple silicon-based Macs, use ``docker build -t emporia-downloader -f Dockerfile.mac .``)
+
+This will create a container named 'emporia-downloader'. To run the container, copy the ``env.example``
+file to a file named ``.env`` and edit it to your liking (note the mandatory settings!). Afterward,
+you can run the container like so:
+
+``docker run --env-file .env --rm -it --name=emporia emporia-downloader:latest``
 
 License
 =============
