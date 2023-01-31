@@ -138,6 +138,21 @@ each device going back by an hour. The data shown will be in Kilowatt-hours but 
 InfluxDB will be in Watts. There will be two lines per device and channel combination as the
 downloader splits the download into chunks with no more than 2000 datapoints.
 
+Docker
+=============
+
+To create a docker container, execute the following command:
+
+``docker build -t emporia-downloader .``
+
+(On Apple silicon-based Macs, use ``docker build -t emporia-downloader -f Dockerfile.mac .``)
+
+This will create a container named 'emporia-downloader'. To run the container, copy the ``env.example``
+file to a file named ``.env`` and edit it to your liking (note the mandatory settings!). Afterward,
+you can run the container like so:
+
+``docker run --env-file .env --rm -it --name=emporia emporia-downloader:latest``
+
 License
 =============
 

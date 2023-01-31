@@ -1,0 +1,13 @@
+FROM maven:3.8.7-eclipse-temurin-19 AS build
+RUN rm -rf /home/app/dist
+COPY src /home/app/src
+RUN mv /home/app/src/main/resources/log4j2.xml.docker /home/app/src/main/resources/log4j2.xml
+COPY pom.xml /home/app
+RUN mvn -f /home/app/pom.xml clean package
+
+# This is a larger image but there is no alpine-based jdk for aarch64, it seems
+FROM eclipse-temurin:19-jdk-centos7
+COPY --from=build /home/app/dist/emporia-downloader.*.jar /emporia-downloader.jar
+COPY entrypoint.sh /
+ENTRYPOINT ["/entrypoint.sh"]
+
