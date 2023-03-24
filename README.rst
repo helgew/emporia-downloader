@@ -22,6 +22,9 @@
 Emporiá Vue Data Downloader
 ===========================
 
+**NOTE: I am no longer using this tool myself since I have converted my Envoy Vue for use with esphome.
+I will try to respond to issues here but this code will no longer be maintained.** 
+
 This project provides a client application for the `Emporiá Energy Smart Home Monitor
 <https://emporiaenergy.com>`_ cloud data storage. It allows users to save their electricity
 usage to an `InfluxDB <https://www.influxdata.com>`_ database and/or in JSON format. By default,
