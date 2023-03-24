@@ -1,3 +1,8 @@
+# These are mandatory and should not be changed
+pool-id=us-east-2_ghlOXVLi1
+clientapp-id=4qte47jbstod8apnfic0bunmrq
+region=us-east-2
+
 # Username and password must be configured here or provided on the command line
 # username=
 # password=
