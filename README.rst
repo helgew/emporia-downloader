@@ -39,7 +39,7 @@ All external API dependencies are managed via maven, which is needed for compila
 Usage
 =============
 
-You can compile the downloader application yourself or download the latest version (1.3)
+You can compile the downloader application yourself or download the latest version (1.4)
 from the `github repository <https://github.com/helgew/emporia-downloader/releases>`_.
 
 Compilation
@@ -114,7 +114,7 @@ InfluxDB-related settings) are configured in ``config.properties``.
 Continuously download per-second datapoints starting 3 hours ago, saving data to InfluxDB
 -----------
 
-``java -jar emporia-downloader.1.3.jar --config config.properties``
+``java -jar emporia-downloader.1.4.jar --config config.properties``
 
 This assumes that InfluxDB specific parameters are configured in ``config.properties`` and that
 all other parameters are left as defaults.
@@ -122,7 +122,7 @@ all other parameters are left as defaults.
 Continuously download hourly datapoints starting yesterday, saving data to InfluxDB
 -----------
 
-``java -jar emporia-downloader.1.3.jar --scale h --history 1d``
+``java -jar emporia-downloader.1.4.jar --scale h --history 1d``
 
 In this case, the downloader will download and save the historical data and then go into a
 continuous loop where it will sleep for an hour and then download new data. All data saved to
@@ -131,7 +131,7 @@ InfluxDB will be in Kilowatt-hours.
 Print the last hour of per-second data to STDOUT only and quit
 -----------
 
-``java -jar emporia-downloader.1.3.jar --history 1h --raw --sleep 0``
+``java -jar emporia-downloader.1.4.jar --history 1h --raw --sleep 0``
 
 The downloader will download and print in JSON format the per-second usage for
 each device going back by an hour. The data shown will be in Kilowatt-hours but any data saved to
